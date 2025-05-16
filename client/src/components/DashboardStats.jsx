@@ -7,7 +7,6 @@ const DashboardStats = ({ stats }) => {
     { label: "Total Students", value: stats.totalStudents },
     { label: "Total Internships", value: stats.totalInternships },
     { label: "Total Feedbacks", value: stats.totalFeedbacks },
-    { label: "Pending Internships", value: stats.pendingInternships },
   ];
 
   return (

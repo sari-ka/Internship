@@ -11,4 +11,4 @@ const StudentSchema = new mongoose.Schema({
   phoneNo: Number,
 });
 
-module.exports = mongoose.model('Student', StudentSchema);
+module.exports = mongoose.model('student', StudentSchema);

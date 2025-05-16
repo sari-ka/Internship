@@ -3,17 +3,29 @@ const router = express.Router();
 const Student = require('../models/Student');
 const Internship = require('../models/Internship');
 const Feedback = require('../models/Feedback');
+const Admin = require('../models/Admin')
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
-// Filtered internships by status + branch + semester + year
-// Endpoint: /api/admin/internships/filter
-// Filtered internships by status + branch + semester + year
+router.get('/',async(req,res)=>{
+  const a = await Admin.find();
+  res.send({message : "admin", payload : a})
+})
 router.get('/internships/filter', async (req, res) => {
-  const { type, branch, year, semester } = req.query;
+  const { type, semester, section, year, month, company } = req.query; // Include 'company' in the query
+  const today = new Date();
+  const matchesAcronym = (query, name) => {
+    const acronym = name
+      .split(/\s+/) // Split by spaces
+      .map(word => word[0].toUpperCase()) // Get the first letter of each word
+      .join(''); // Join them to form the acronym
+
+    return acronym.includes(query.toUpperCase()); // Check if acronym contains the query
+  };
 
   try {
-    const today = new Date();
+    // Filter by date type
     let dateQuery = {};
-
     if (type === 'ongoing') {
       dateQuery = { startingDate: { $lte: today }, endingDate: { $gte: today } };
     } else if (type === 'past') {
@@ -22,19 +34,36 @@ router.get('/internships/filter', async (req, res) => {
       dateQuery = { startingDate: { $gt: today } };
     }
 
-    const internships = await Internship.find(dateQuery);
+    // Filter internships by date range
+    let internships = await Internship.find(dateQuery);
 
+    // Further filter by year & month of startingDate
+    if (year) {
+      internships = internships.filter(i => new Date(i.startingDate).getFullYear().toString() === year);
+    }
+
+    if (month) {
+      internships = internships.filter(i => (new Date(i.startingDate).getMonth() + 1).toString() === month);
+    }
+
+    // Filter by company name (case insensitive and acronym matching)
+    if (company) {
+      internships = internships.filter(i => {
+        const regex = new RegExp(company, 'i'); // Regular case-insensitive match
+        return regex.test(i.organizationName) || matchesAcronym(company, i.organizationName);
+      });
+    }
+
+    // Find students matching section & semester
     const studentQuery = {};
-    if (branch) studentQuery.branch = branch;
-    if (year) studentQuery.year = year;
+    if (section) studentQuery.section = section;
     if (semester) studentQuery.semester = semester;
 
     const students = await Student.find(studentQuery);
     const studentMap = {};
-    students.forEach(s => {
-      studentMap[s.rollNumber] = s;
-    });
+    students.forEach(s => { studentMap[s.rollNumber] = s; });
 
+    // Filter internships with valid student match
     const filteredInternships = internships
       .filter(i => studentMap[i.rollNumber])
       .map(i => {
@@ -49,9 +78,8 @@ router.get('/internships/filter', async (req, res) => {
         return {
           ...i.toObject(),
           status,
-          branch: studentMap[i.rollNumber]?.branch || null,
           semester: studentMap[i.rollNumber]?.semester || null,
-          package: i.package || null
+          section: studentMap[i.rollNumber]?.section || null,
         };
       });
 
@@ -60,8 +88,6 @@ router.get('/internships/filter', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-
 
 // Update Internship Status
 // Endpoint: /api/admin/internships/:id/status
@@ -81,17 +107,13 @@ router.patch('/internships/:id/status', async (req, res) => {
   }
 });
 
-// Filtered Students
-// Endpoint: /api/admin/students
 router.get('/students', async (req, res) => {
   try {
-    const { year, semester, branch } = req.query;
+    const { semester, section } = req.query;
 
     let query = {};
-
-    if (year) query.academicYear = year;
     if (semester) query.semester = semester;
-    if (branch) query.branch = branch;
+    if (section) query.section = section;
 
     const students = await Student.find(query);
     res.json(students);
@@ -99,6 +121,7 @@ router.get('/students', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Dashboard Stats
 // Endpoint: /api/admin/dashboard-stats
@@ -144,18 +167,19 @@ router.get('/feedbacks', async (req, res) => {
 
 router.get('/analytics', async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, year, month } = req.query;
 
     const internships = await Internship.find();
     const students = await Student.find();
 
     const studentMap = {};
-    students.forEach(s => {
+    students.forEach((s) => {
       studentMap[s.rollNumber] = s;
     });
 
     const today = new Date();
 
+    // Filter internships based on status, year, and month
     const filtered = internships.filter((i) => {
       const student = studentMap[i.rollNumber];
       if (!student) return false;
@@ -163,12 +187,19 @@ router.get('/analytics', async (req, res) => {
       const start = new Date(i.startingDate);
       const end = new Date(i.endingDate);
 
-      let calculatedStatus = "";
-      if (today < start) calculatedStatus = "future";
-      else if (today > end) calculatedStatus = "past";
-      else calculatedStatus = "ongoing";
+      let calculatedStatus = '';
+      if (today < start) calculatedStatus = 'future';
+      else if (today > end) calculatedStatus = 'past';
+      else calculatedStatus = 'ongoing';
 
-      if (status && status !== "all" && status !== calculatedStatus) return false;
+      // Filter by status
+      if (status && status !== 'all' && status !== calculatedStatus) return false;
+
+      // Filter by year
+      if (year && start.getFullYear() !== parseInt(year)) return false;
+
+      // Filter by month
+      if (month && start.getMonth() + 1 !== parseInt(month)) return false;
 
       i.branch = student.branch;
       i.semester = student.semester;
@@ -180,8 +211,8 @@ router.get('/analytics', async (req, res) => {
     const semesterCounts = {};
 
     filtered.forEach((item) => {
-      const branch = item.branch || "Unknown";
-      const semester = item.semester || "Unknown";
+      const branch = item.branch || 'Unknown';
+      const semester = item.semester || 'Unknown';
 
       branchCounts[branch] = (branchCounts[branch] || 0) + 1;
       semesterCounts[semester] = (semesterCounts[semester] || 0) + 1;
@@ -192,10 +223,11 @@ router.get('/analytics', async (req, res) => {
       semesterData: Object.entries(semesterCounts).map(([semester, count]) => ({ semester, count })),
     });
   } catch (err) {
-    console.error("Analytics Fetch Error:", err);
-    res.status(500).json({ message: "Server Error" });
+    console.error('Analytics Fetch Error:', err);
+    res.status(500).json({ message: 'Server Error' });
   }
 });
+
 
 router.get("/roll/:rollNumber", async (req, res) => {
   try {
@@ -240,5 +272,26 @@ router.get("/roll/:rollNumber", async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 });
+
+router.get('/login/:adminID/:password', async (req, res) => {
+  const { adminID, password } = req.params;
+
+  try {
+    const admin = await Admin.findOne({ adminID : adminID });
+    console.log(admin)
+    if (!admin || admin.password !== password) {
+      return res.status(400).json({ msg: 'Invalid credentials' });
+    }
+
+    const payload = { adminID: admin.adminID, name: admin.name };
+    const token = jwt.sign(payload, 'your_jwt_secret', { expiresIn: '2h' });
+
+    res.json({ token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
 
 module.exports = router;

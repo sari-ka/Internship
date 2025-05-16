@@ -15,9 +15,9 @@ const InternshipSchema = new mongoose.Schema({
   hrPhone: Number,
   duration: Number,
   package: Number,
-  semester: String, // ✅ Added
-  branch: String,   // ✅ Added
+  semester: String,
+  branch: String,   
   status: { type: String, default: "Pending" },
 });
 
-module.exports = mongoose.model('Internship', InternshipSchema);
+module.exports = mongoose.model('internship', InternshipSchema);
