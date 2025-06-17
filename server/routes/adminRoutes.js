@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Student = require('../models/Student');
+const User = require('../models/User');
 const Internship = require('../models/Internship');
 const Feedback = require('../models/Feedback');
 const Admin = require('../models/Admin');
@@ -19,8 +19,13 @@ router.get('/', async (req, res) => {
 
 // Filter internships with query params including company acronym matching
 router.get('/internships/filter', async (req, res) => {
-  const { type, semester, section, year, month, company } = req.query;
+  const { type, semester, branch, year, month, endYear, endMonth, company } = req.query;
   const today = new Date();
+
+  const knownBranches = [
+    "CSE", "IT", "ECE", "EEE", "MECH", "CIVIL",
+    "AI&ML", "AI&DS", "CSBS", "IoT", "AIDS"
+  ];
 
   const matchesAcronym = (query, name) => {
     const acronym = name
@@ -31,7 +36,6 @@ router.get('/internships/filter', async (req, res) => {
   };
 
   try {
-    // Date filtering
     let dateQuery = {};
     if (type === 'ongoing') {
       dateQuery = { startingDate: { $lte: today }, endingDate: { $gte: today } };
@@ -43,14 +47,23 @@ router.get('/internships/filter', async (req, res) => {
 
     let internships = await Internship.find(dateQuery);
 
+    // Filter by starting date year and month
     if (year) {
       internships = internships.filter(i => new Date(i.startingDate).getFullYear().toString() === year);
     }
-
     if (month) {
       internships = internships.filter(i => (new Date(i.startingDate).getMonth() + 1).toString() === month);
     }
 
+    // Filter by ending date year and month
+    if (endYear) {
+      internships = internships.filter(i => new Date(i.endingDate).getFullYear().toString() === endYear);
+    }
+    if (endMonth) {
+      internships = internships.filter(i => (new Date(i.endingDate).getMonth() + 1).toString() === endMonth);
+    }
+
+    // Filter by company name or acronym
     if (company) {
       internships = internships.filter(i => {
         const regex = new RegExp(company, 'i');
@@ -58,23 +71,37 @@ router.get('/internships/filter', async (req, res) => {
       });
     }
 
-    // Find matching students by section & semester
-    const studentQuery = {};
-    if (section) studentQuery.section = section;
-    if (semester) studentQuery.semester = semester;
+    // Fetch all students first
+    let students = await User.find();
+    
+    // Apply semester filter
+    if (semester) {
+      students = students.filter(s => s.semester === semester);
+    }
 
-    const students = await Student.find(studentQuery);
+    // Apply branch filter with "Other" logic
+    if (branch) {
+      if (branch === "Other") {
+        students = students.filter(s => !knownBranches.includes(s.branch));
+      } else {
+        students = students.filter(s => s.branch === branch);
+      }
+    }
+
+    // Map for fast access
     const studentMap = {};
-    students.forEach(s => { studentMap[s.rollNumber] = s; });
+    students.forEach(s => {
+      studentMap[s.rollNo] = s;
+    });
 
-    // Filter internships that have a matching student
+    // Final filter
     const filteredInternships = internships
-      .filter(i => studentMap[i.rollNumber])
+      .filter(i => studentMap[i.rollNo])
       .map(i => {
+        const student = studentMap[i.rollNo];
         const start = new Date(i.startingDate);
         const end = new Date(i.endingDate);
         let status = "";
-
         if (today < start) status = "future";
         else if (today > end) status = "past";
         else status = "ongoing";
@@ -82,8 +109,8 @@ router.get('/internships/filter', async (req, res) => {
         return {
           ...i.toObject(),
           status,
-          semester: studentMap[i.rollNumber]?.semester || null,
-          section: studentMap[i.rollNumber]?.section || null,
+          semester: student.semester || null,
+          branch: student.branch || null,
         };
       });
 
@@ -106,16 +133,26 @@ router.patch('/internships/:id/status', async (req, res) => {
   }
 });
 
-// Get students with optional semester and section filters
-router.get('/students', async (req, res) => {
+// Get Users with optional semester and section filters
+router.get('/Users', async (req, res) => {
   try {
-    const { semester, section } = req.query;
-    let query = {};
-    if (semester) query.semester = semester;
-    if (section) query.section = section;
+    const { semester, branch } = req.query;
 
-    const students = await Student.find(query);
-    res.json(students);
+    const query = {};
+    if (semester) query.semester = semester;
+
+    const knownBranches = ["CSE", "IT", "ECE", "EEE", "MECH", "CIVIL", "AI&ML", "AI&DS", "CSBS", "IoT", "AIDS"];
+
+    if (branch) {
+      if (branch === "OTHER") {
+        query.branch = { $nin: knownBranches }; // Not in the known list
+      } else {
+        query.branch = branch;
+      }
+    }
+
+    const users = await User.find(query);
+    res.json(users);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -124,13 +161,13 @@ router.get('/students', async (req, res) => {
 // Dashboard stats
 router.get('/dashboard-stats', async (req, res) => {
   try {
-    const totalStudents = await Student.countDocuments();
+    const totalUsers = await User.countDocuments();
     const totalInternships = await Internship.countDocuments();
     const totalFeedbacks = await Feedback.countDocuments();
     const pendingInternships = await Internship.countDocuments({ status: 'Pending' });
 
     res.json({
-      totalStudents,
+      totalUsers,
       totalInternships,
       totalFeedbacks,
       pendingInternships,
@@ -166,8 +203,7 @@ router.get('/feedbacks', async (req, res) => {
 router.post('/feedbacks', async (req, res) => {
   try {
     const {
-      rollNumber,
-      internshipID,
+      rollNo,
       skillsLearned,
       technicalSkill,
       communicationSkill,
@@ -178,8 +214,7 @@ router.post('/feedbacks', async (req, res) => {
 
     // Basic validation
     if (
-      !rollNumber ||
-      !internshipID ||
+      !rollNo ||
       !skillsLearned ||
       !technicalSkill ||
       !communicationSkill ||
@@ -190,9 +225,21 @@ router.post('/feedbacks', async (req, res) => {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
+    // Check if internship has ended before allowing feedback
+    const internship = await Internship.findOne({ rollNo });
+    if (!internship) {
+      return res.status(400).json({ error: 'No internship found for this roll number' });
+    }
+
+    const today = new Date();
+    const endingDate = new Date(internship.endingDate);
+
+    if (today < endingDate) {
+      return res.status(400).json({ error: 'Feedback can only be submitted after the internship ends' });
+    }
+
     const newFeedback = new Feedback({
-      rollNumber,
-      internshipID,
+      rollNo,
       skillsLearned,
       technicalSkill,
       communicationSkill,
@@ -216,42 +263,63 @@ router.get('/analytics', async (req, res) => {
     const { status, year, month } = req.query;
 
     const internships = await Internship.find();
-    const students = await Student.find();
+    const users = await User.find();
 
-    const studentMap = {};
-    students.forEach((s) => { studentMap[s.rollNumber] = s; });
+    const userMap = {};
+    users.forEach((u) => {
+      if (u.rollNo) {
+        userMap[u.rollNo.toUpperCase().trim()] = u;
+      }
+    });
 
     const today = new Date();
 
     const filtered = internships.filter((i) => {
-      const student = studentMap[i.rollNumber];
-      if (!student) return false;
+      const roll = i.rollNo?.toUpperCase().trim();
+      const user = userMap[roll];
+      if (!user) return false;
 
       const start = new Date(i.startingDate);
       const end = new Date(i.endingDate);
 
-      let calculatedStatus = '';
-      if (today < start) calculatedStatus = 'future';
-      else if (today > end) calculatedStatus = 'past';
-      else calculatedStatus = 'ongoing';
+      let internshipStatus = "";
+      if (today < start) internshipStatus = "future";
+      else if (today > end) internshipStatus = "past";
+      else internshipStatus = "ongoing";
 
-      if (status && status !== 'all' && status !== calculatedStatus) return false;
-      if (year && start.getFullYear() !== parseInt(year)) return false;
-      if (month && start.getMonth() + 1 !== parseInt(month)) return false;
+      if (status && status !== "all" && internshipStatus !== status) return false;
+      if (year && start.getFullYear().toString() !== year) return false;
+      if (month && (start.getMonth() + 1).toString() !== month) return false;
 
-      i.branch = student.branch;
-      i.semester = student.semester;
+      i.branch = user.branch;
+      i.semester = user.semester;
       return true;
     });
+
+    const knownBranches = [
+      "CSE", "IT", "ECE", "EEE", "MECH", "CIVIL",
+      "AI&ML", "AI&DS", "CSBS", "IoT", "AIDS"
+    ];
 
     const branchCounts = {};
     const semesterCounts = {};
 
-    filtered.forEach((item) => {
-      const branch = item.branch || 'Unknown';
-      const semester = item.semester || 'Unknown';
+    // Initialize all known branches with 0
+    knownBranches.forEach(branch => {
+      branchCounts[branch] = 0;
+    });
+    branchCounts["Other"] = 0; // Add "Other"
 
-      branchCounts[branch] = (branchCounts[branch] || 0) + 1;
+    filtered.forEach((item) => {
+      const branch = item.branch || "Unknown";
+      const semester = item.semester || "Unknown";
+
+      if (knownBranches.includes(branch)) {
+        branchCounts[branch]++;
+      } else {
+        branchCounts["Other"]++;
+      }
+
       semesterCounts[semester] = (semesterCounts[semester] || 0) + 1;
     });
 
@@ -260,22 +328,23 @@ router.get('/analytics', async (req, res) => {
       semesterData: Object.entries(semesterCounts).map(([semester, count]) => ({ semester, count })),
     });
   } catch (err) {
-    console.error('Analytics Fetch Error:', err);
-    res.status(500).json({ message: 'Server Error' });
+    console.error("Analytics Error:", err);
+    res.status(500).json({ message: "Server Error" });
   }
 });
 
-// Get student + their internships by roll number
-router.get('/roll/:rollNumber', async (req, res) => {
-  try {
-    const rollNumber = req.params.rollNumber;
 
-    const student = await Student.findOne({ rollNumber });
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
+// Get User + their internships by roll number
+router.get('/roll/:rollNo', async (req, res) => {
+  try {
+    const rollNo = req.params.rollNo.toUpperCase();
+
+    const userData = await User.findOne({ rollNo });
+    if (!userData) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    const internships = await Internship.find({ rollNumber });
+    const internships = await Internship.find({ rollNo });
     const today = new Date();
 
     const detailedInternships = internships.map((internship) => {
@@ -298,7 +367,7 @@ router.get('/roll/:rollNumber', async (req, res) => {
     });
 
     res.json({
-      student,
+      user: userData,
       internships: detailedInternships
     });
   } catch (err) {
@@ -307,30 +376,41 @@ router.get('/roll/:rollNumber', async (req, res) => {
   }
 });
 
+
 // Admin login with JWT token generation
 router.get('/login/:adminID/:password', async (req, res) => {
   const { adminID, password } = req.params;
 
   try {
     const admin = await Admin.findOne({ adminID });
+    console.log(admin)
     if (!admin) {
-      return res.status(400).json({ msg: 'Invalid credentials' });
+      return res.status(400).json({ msg: 'Invaczlid credentials',admin:{admin} });
     }
 
     // If you store hashed passwords, use bcrypt.compare here
     // For now, comparing plain text as per your example
     if (admin.password !== password) {
-      return res.status(400).json({ msg: 'Invalid credentials' });
+      return res.status(400).json({ msg: 'Invasdfcbcbblid credentials',admin:{admin} });
     }
-
     const payload = { adminID: admin.adminID, name: admin.name };
     const token = jwt.sign(payload, 'your_jwt_secret', { expiresIn: '2h' });
 
     res.json({ token });
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server error');
+    res.status(500).send('Server error'.admin);
   }
 });
 
+router.get('/add', async (req, res) => {
+
+  try {
+    const admin = await Admin.find();
+      return res.status(400).json({admin:{admin} });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error'.admin);
+  }
+});
 module.exports = router;

@@ -1,4 +1,4 @@
-console.log("✅ internshipRoutes.js loaded");
+// ✅ Corrected internshipRoutes.js
 
 const express = require('express');
 const router = express.Router();
@@ -38,7 +38,7 @@ router.post('/submit', upload.fields([
     const body = req.body;
 
     const internshipData = {
-      rollNumber: body.rollNo,
+      rollNo: body.rollNo,
       name: body.name,
       branch: body.branch,
       semester: body.semester,
@@ -49,8 +49,8 @@ router.post('/submit', upload.fields([
       organizationName: body.organization,
       hrEmail: body.hrEmail,
       hrPhone: Number(body.hrMobile),
-      duration: Number(body.duration),
-      package: Number(body.pay),
+      duration: body.duration,
+      package: body.pay,
       startingDate: body.startDate,
       endingDate: body.endDate,
       offerLetter: req.files['offerLetter'] ? `/uploads/${req.files['offerLetter'][0].filename}` : undefined,
@@ -59,7 +59,7 @@ router.post('/submit', upload.fields([
     };
 
     // Validate required fields
-    const requiredFields = ['rollNumber', 'name', 'branch', 'semester', 'email', 'role', 'organizationName', 'hrEmail', 'duration', 'package'];
+    const requiredFields = ['rollNo', 'name', 'branch', 'semester', 'email', 'role', 'organizationName', 'hrEmail', 'duration', 'package'];
     for (const field of requiredFields) {
       if (!internshipData[field]) {
         console.error(`Missing required field: ${field}`);
@@ -70,26 +70,6 @@ router.post('/submit', upload.fields([
     const newInternship = new Internship(internshipData);
     await newInternship.save();
 
-    // Update Student document
-    const Student = require('../models/Student');
-    let student = await Student.findOne({ rollNumber: body.rollNo });
-    if (student) {
-      student.internships.push(newInternship._id);
-      await student.save();
-    } else {
-      student = new Student({
-        rollNumber: body.rollNo,
-        name: body.name,
-        email: body.email,
-        branch: body.branch,
-        semester: body.semester,
-        section: body.section,
-        phoneNo: body.mobile,
-        internships: [newInternship._id]
-      });
-      await student.save();
-      console.log(`Created new student with roll number ${body.rollNo}`);
-    }
     res.status(201).json({ message: 'Internship submitted successfully' });
   } catch (error) {
     console.error('Internship submission error:', error.message);

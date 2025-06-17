@@ -23,10 +23,19 @@ function Login_ad() {
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center vh-100">
+    <div>
+    <div className="header d-flex align-items-center p-3 mb-5">
+        <img
+          src="https://media.licdn.com/dms/image/v2/C560BAQFKt8O5GdaFjw/company-logo_200_200/company-logo_200_200/0/1680080095222/vnr_vignanajyothiinstituteofengineeringandtechnology_logo?e=2147483647&v=beta&t=nV3OFiSPyeDZdeZib-pHBlNwN-i1S73KwQljcRw3FvY"
+          alt="VNR Vignana Jyothi Logo"
+          style={{ width: '80px', height: '80px'}}
+        />
+        <h1 className="text-light">VNR Vignana Jyothi Institute of Engineering and Technology</h1>
+      </div>
+    <div className="container d-flex justify-content-center align-items-center">
       <div className="card p-4 shadow-lg" style={{ maxWidth: '400px', width: '100%' }}>
+        
         <h3 className="text-center mb-4">Admin Login</h3>
-
         {error && (
           <div className="alert alert-danger" role="alert">
             {error}
@@ -61,6 +70,7 @@ function Login_ad() {
           </button>
         </form>
       </div>
+    </div>
     </div>
   );
 }

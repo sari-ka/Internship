@@ -10,17 +10,16 @@ import Students from './pages/Students';
 import Internships from './pages/Internships';
 import Feedbacks from './pages/Feedbacks';
 import Analytics from './pages/Analytics';
-
+import Home from './pages/Home';
 import Login_ad from './pages/Login_ad';
-import Login from './pages/login';
+import Login from './pages/Login'; 
 import Register from './pages/Register';
 import InternshipForm from './pages/InternshipForm';
 import Upload from './pages/Upload';
-import Home  from './pages/Home';
+import Profile from './pages/Profile';
 import Landing from './pages/Landing';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
-
 
 const App = () => {
   return (
@@ -28,6 +27,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/upload" element={<Upload />} />
         <Route path="/admin-login" element={<Login_ad />} />
         <Route path="/student-login" element={<Login />} />

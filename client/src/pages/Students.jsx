@@ -6,7 +6,7 @@ const Students = () => {
   const [students, setStudents] = useState([]);
   const [filters, setFilters] = useState({
     semester: "",
-    section: ""
+    branch: ""
   });
   const [showModal, setShowModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -14,8 +14,9 @@ const Students = () => {
   const fetchStudents = async () => {
     try {
       const query = new URLSearchParams(filters).toString();
-      const res = await axios.get(`http://localhost:5000/api/admin/students?${query}`);
+      const res = await axios.get(`http://localhost:5000/api/admin/Users?${query}`);
       setStudents(res.data);
+      console.log("Students data:", res.data);
     } catch (error) {
       console.error("Error fetching students:", error);
     }
@@ -29,9 +30,9 @@ const Students = () => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
-  const openModal = async (rollNumber) => {
+  const openModal = async (rollNo) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/admin/roll/${rollNumber}`);
+      const res = await axios.get(`http://localhost:5000/api/admin/roll/${rollNo}`);
       setSelectedStudent(res.data);
       console.log(res.data)
       setShowModal(true);
@@ -63,16 +64,24 @@ const Students = () => {
         </select>
 
         <select
-          name="section"
+          name="branch"
           onChange={handleChange}
-          value={filters.section}
+          value={filters.branch}
           className="form-select custom-select-responsive w-auto mb-2"
         >
-          <option value="">Select Section</option>
-          <option value="A">A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-          <option value="D">D</option>
+          <option value="">Select Branch</option>
+          <option value="CSE">CSE</option>
+          <option value="IT">IT</option>
+          <option value="ECE">ECE</option>
+          <option value="EEE">EEE</option>
+          <option value="MECH">MECH</option>
+          <option value="CIVIL">CIVIL</option>
+          <option value="AI&ML">AI&ML</option>
+          <option value="AI&DS">AI&DS</option>
+          <option value="CSBS">CSBS</option>
+          <option value="IoT">IoT</option>
+          <option value="AIDS">AIDS</option>
+          <option value="OTHER">Other</option>
         </select>
       </div>
 
@@ -82,7 +91,7 @@ const Students = () => {
             <th>Roll No</th>
             <th>Name</th>
             <th>Email</th>
-            <th>Section</th>
+            <th>Branch</th>
             <th>Semester</th>
             <th>Action</th>
           </tr>
@@ -90,15 +99,15 @@ const Students = () => {
         <tbody>
           {students.map((student) => (
             <tr key={student._id}>
-              <td>{student.rollNumber}</td>
+              <td>{student.rollNo}</td>
               <td>{student.name}</td>
               <td>{student.email}</td>
-              <td>{student.section}</td>
+              <td>{student.branch}</td>
               <td>{student.semester}</td>
               <td>
                 <button
                   className="btn btn-sm btn-primary"
-                  onClick={() => openModal(student.rollNumber)}
+                  onClick={() => openModal(student.rollNo)}
                 >
                   View
                 </button>
@@ -107,8 +116,7 @@ const Students = () => {
           ))}
         </tbody>
       </table>
-
-      {showModal && selectedStudent && (
+    {showModal && selectedStudent && (
   <div
     className="modal"
     style={{
@@ -136,13 +144,12 @@ const Students = () => {
         overflowY: "auto"
       }}
     >
-      <h3>{selectedStudent.student.name}</h3>
-      <p>Email: {selectedStudent.student.email}</p>
-      <p>Phone: {selectedStudent.student.phoneNo}</p>
-      <p>Roll No: {selectedStudent.student.rollNumber}</p>
-      <p>Semester: {selectedStudent.student.semester}</p>
-      <p>Course: {selectedStudent.student.course}</p>
-      <p>Section: {selectedStudent.student.section}</p>
+      <h3>{selectedStudent.user.name}</h3>
+      <p>Email: {selectedStudent.user.email}</p>
+      <p>Phone: {selectedStudent.user.phoneNo}</p>
+      <p>Roll No: {selectedStudent.user.rollNo}</p>
+      <p>Semester: {selectedStudent.user.semester}</p>
+      <p>Section: {selectedStudent.user.section}</p>
 
       <h4 className="mt-3">Internships:</h4>
       {selectedStudent.internships.length === 0 ? (
@@ -165,7 +172,6 @@ const Students = () => {
     </div>
   </div>
 )}
-
     </div>
   );
 };

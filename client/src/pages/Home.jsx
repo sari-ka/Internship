@@ -1,74 +1,72 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllInternships } from '../services/Api';
+import axios from 'axios';
 import './HomePage.css';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const userEmail = localStorage.getItem("email");
-  const [userInternships, setUserInternships] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
+  const [showProfile, setShowProfile] = useState(false);
 
-  useEffect(() => {
-    const fetchInternships = async () => {
-      try {
-        const data = await getAllInternships();
-        if (userEmail) {
-          const filtered = data.filter(i => i.email === userEmail);
-          setUserInternships(filtered);
-        }
-      } catch (error) {
-        console.error("Failed to fetch internships:", error);
+  const fetchUserProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn("No token found in localStorage");
+        return;
       }
-    };
+      const res = await axios.get('http://localhost:5000/api/user/profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUserProfile(res.data);
+    } catch (error) {
+      console.error("Failed to fetch user profile:", error);
+    }
+  };
 
-    fetchInternships();
-    const intervalId = setInterval(fetchInternships, 1000);
-    return () => clearInterval(intervalId);
-  }, [userEmail]);
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("email");
+    navigate("/login");
+  };
 
   return (
-    <div className="homepage-container">
-      
-      {/* 🔵 HEADER SECTION */}
-      <div className=" header d-flex align-items-center mb-4 p-3">
+    <div className="home-container">
+      <div className="home-header">
         <img
           src="https://media.licdn.com/dms/image/v2/C560BAQFKt8O5GdaFjw/company-logo_200_200/company-logo_200_200/0/1680080095222/vnr_vignanajyothiinstituteofengineeringandtechnology_logo?e=2147483647&v=beta&t=nV3OFiSPyeDZdeZib-pHBlNwN-i1S73KwQljcRw3FvY"
-          alt="VNR Vignana Jyothi Logo"
-          style={{ width: '80px', height: '80px', marginRight: '15px' }}
+          alt="VNR Logo"
+          className="home-logo"
         />
-        <h1 className="mb-0">VNR Vignana Jyothi Institute of Engineering and Technology</h1>
+        <h1 className="home-title">VNR Vignana Jyothi Institute of Engineering and Technology</h1>
+        <button className="home-logout-btn" onClick={handleLogout}>Logout</button>
+        <button className="home-profile-btn" onClick={() => navigate('/profile')}>👤</button>
       </div>
 
-      {/* 🟢 MAIN CONTENT */}
-      <div className="main-content">
-        <h2 className="subtitle">Welcome to the UG/PG Internship Portal</h2>
+      <div className="home-main">
+        <h2 className="home-subtitle">Welcome to the UG/PG Internship Portal</h2>
 
-        <div className="options-grid">
-          <div className="card">
-            <h2>📄 Documents</h2>
-            <div className="document-section">
-              <a href="https://1drv.ms/w/c/2879c4145659eca3/ETHRdK_La15KigY-Go9GHy0BQu9tEzCa5KRZvMqh-UH6XQ?e=CIhyHU" download>
-                Letter of Recommendation Template
-              </a>
+        <div className="home-grid">
+          <div className="home-card">
+            <h3>📄 Documents</h3>
+            <div className="home-doc-section">
+              <a href="" download>Letter of Recommendation Template</a>
             </div>
-            <div className="document-section">
-              <a href="https://1drv.ms/w/c/2879c4145659eca3/ETHRdK_La15KigY-Go9GHy0BQu9tEzCa5KRZvMqh-UH6XQ?e=CIhyHU" download>
-                No Objection Certificate (NOC)
-              </a>
+            <div className="home-doc-section">
+              <a href="" download>No Objection Certificate (NOC)</a>
             </div>
           </div>
 
-          <div className="card">
-            <h2>📝 Apply</h2>
-            <button onClick={() => navigate('/application')}>Fill Application Form</button>
+          <div className="home-card">
+            <h3>📝 Apply</h3>
+            <button onClick={() => navigate('/apply')}>Fill Application Form</button>
           </div>
 
-          { (
-            <div className="card">
-              <h2>📤 Submit Feedback</h2>
-              <button onClick={() => navigate('/upload')}>Upload Feedback Form</button>
-            </div>
-          )}
+          <div className="home-card">
+            <h3>📤 Submit Feedback</h3>
+            <button onClick={() => navigate('/upload')}>Upload Feedback Form</button>
+          </div>
         </div>
       </div>
     </div>

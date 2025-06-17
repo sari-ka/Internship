@@ -4,7 +4,7 @@ import "./DashboardStats.css";
 
 const DashboardStats = ({ stats }) => {
   const statItems = [
-    { label: "Total Students", value: stats.totalStudents },
+    { label: "Total Students", value: stats.totalUsers },
     { label: "Total Internships", value: stats.totalInternships },
     { label: "Total Feedbacks", value: stats.totalFeedbacks },
   ];

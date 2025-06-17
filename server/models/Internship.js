@@ -7,7 +7,7 @@ const InternshipSchema = new mongoose.Schema({
   offerLetter: String,
   applicationLetter: String,
   noc: String,
-  rollNumber: String,
+  rollNo: String,
   role: String,
   organizationName: String,
   hrName: String,

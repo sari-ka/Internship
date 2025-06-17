@@ -2,4 +2,7 @@
 GET http://localhost:5000/api/admin/login/A1/Sarika@123
 
 ###
-GET http://localhost:5000/api/admin
+GET http://localhost:5000/api/admin/internships
+
+###
+GET http://localhost:5000/api/user/profile
