@@ -4,12 +4,12 @@ import { useNavigate } from 'react-router-dom';
 const Upload = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    rollNumber: '',
+    rollNo: '',
     skillsLearned: '',
-    technicalSkill: '',
-    communicationSkill: '',
-    teamWork: '',
-    timeManagement: '',
+    technicalSkill: 1,
+    communicationSkill: 1,
+    teamWork: 1,
+    timeManagement: 1,
     overallExperience: ''
   });
 
@@ -22,7 +22,7 @@ const Upload = () => {
 
     // Fetch internship details to check end date
     try {
-      const internshipRes = await fetch(`http://localhost:5000/api/admin/roll/${formData.rollNumber}`);
+      const internshipRes = await fetch(`http://localhost:5000/api/admin/roll/${formData.rollNo}`);
       if (!internshipRes.ok) {
         alert('Could not find internship details for this roll number.');
         return;
@@ -59,7 +59,7 @@ const Upload = () => {
       if (response.ok) {
         alert('Feedback submitted successfully!');
         setFormData({
-          rollNumber: '',
+          rollNo: '',
           skillsLearned: '',
           technicalSkill: '',
           communicationSkill: '',
@@ -100,9 +100,9 @@ const Upload = () => {
           <label className="form-label">Roll Number</label>
           <input
             type="text"
-            name="rollNumber"
+            name="rollNo"
             className="form-control"
-            value={formData.rollNumber}
+            value={formData.rollNo}
             onChange={handleChange}
             required
           />
@@ -128,7 +128,7 @@ const Upload = () => {
               value={formData.technicalSkill}
               onChange={handleChange}
               min="1"
-              max="5"
+              max="10"
               required
             />
           </div>
@@ -141,7 +141,7 @@ const Upload = () => {
               value={formData.communicationSkill}
               onChange={handleChange}
               min="1"
-              max="5"
+              max="10"
               required
             />
           </div>
@@ -154,7 +154,7 @@ const Upload = () => {
               value={formData.teamWork}
               onChange={handleChange}
               min="1"
-              max="5"
+              max="10"
               required
             />
           </div>
@@ -167,7 +167,7 @@ const Upload = () => {
               value={formData.timeManagement}
               onChange={handleChange}
               min="1"
-              max="5"
+              max="10"
               required
             />
           </div>

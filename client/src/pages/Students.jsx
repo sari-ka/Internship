@@ -146,10 +146,8 @@ const Students = () => {
     >
       <h3>{selectedStudent.user.name}</h3>
       <p>Email: {selectedStudent.user.email}</p>
-      <p>Phone: {selectedStudent.user.phoneNo}</p>
       <p>Roll No: {selectedStudent.user.rollNo}</p>
       <p>Semester: {selectedStudent.user.semester}</p>
-      <p>Section: {selectedStudent.user.section}</p>
 
       <h4 className="mt-3">Internships:</h4>
       {selectedStudent.internships.length === 0 ? (

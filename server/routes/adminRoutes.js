@@ -226,7 +226,7 @@ router.post('/feedbacks', async (req, res) => {
     }
 
     // Check if internship has ended before allowing feedback
-    const internship = await Internship.findOne({ rollNo });
+    const internship = await Internship.findOne({ rollNo:rollNo });
     if (!internship) {
       return res.status(400).json({ error: 'No internship found for this roll number' });
     }
