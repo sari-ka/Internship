@@ -7,6 +7,7 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   branch: { type: String, required: true },
   semester: { type: String, required: true },
+  section: { type: String, enum: ['A', 'B', 'C','D'], required: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['admin', 'student'], default: 'student' },
 });
@@ -28,4 +29,4 @@ UserSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-module.exports = mongoose.model('User', UserSchema,'users');
+module.exports = mongoose.model('user', UserSchema);

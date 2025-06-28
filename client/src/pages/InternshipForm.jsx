@@ -12,15 +12,16 @@ function InternshipForm() {
     semester: "",
     section: "",
     email: "",
-    mobile: "",
+    phoneNo: "",
     role: "",
-    organization: "",
+    organizationName: "",
     hrEmail: "",
-    hrMobile: "",
+    hrPhone: "",
     duration: "",
-    pay: "",
+    package: "",
     startDate: "",
-    endDate: ""
+    endDate: "",
+    internshipType: "" // ✅ Local field only
   });
 
   const [errors, setErrors] = useState({});
@@ -35,39 +36,46 @@ function InternshipForm() {
 
     let updatedFormData = { ...formData, [name]: value };
 
-    // If startDate or endDate changes, update duration accordingly
+    // ✅ Auto-set package for internship type
+    if (name === "internshipType") {
+      if (value === "Unpaid") {
+        updatedFormData.package = "0";
+      } else if (value === "Paid" && formData.package === "0") {
+        updatedFormData.package = "";
+      }
+    }
+
     if (name === "startDate" || name === "endDate") {
       const start = new Date(name === "startDate" ? value : formData.startDate);
       const end = new Date(name === "endDate" ? value : formData.endDate);
       if (start && end && start < end) {
         const diffTime = Math.abs(end - start);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        let duration = '';
+        let duration = "";
         if (diffDays >= 30) {
           const months = Math.floor(diffDays / 30);
           const days = diffDays % 30;
-          duration = months + ' month' + (months > 1 ? 's' : '');
+          duration = months + " month" + (months > 1 ? "s" : "");
           if (days > 0) {
-            duration += ' ' + days + ' day' + (days > 1 ? 's' : '');
+            duration += " " + days + " day" + (days > 1 ? "s" : "");
           }
         } else {
-          duration = diffDays + ' day' + (diffDays > 1 ? 's' : '');
+          duration = diffDays + " day" + (diffDays > 1 ? "s" : "");
         }
         updatedFormData.duration = duration;
       } else {
-        updatedFormData.duration = '';
+        updatedFormData.duration = "";
       }
     }
 
     setFormData(updatedFormData);
 
-    // Real-time validation
     if (name === "email" && !value.endsWith("@vnrvjiet.in")) {
       setErrors({ ...errors, email: "Email must end with @vnrvjiet.in" });
-    } else if (name === "mobile" && !/^\d{10}$/.test(value)) {
-      setErrors({ ...errors, mobile: "Mobile number must be exactly 10 digits" });
-    } else if (name === "hrMobile" && !/^\d{10}$/.test(value)) {
-      setErrors({ ...errors, hrMobile: "HR mobile number must be exactly 10 digits" });
+    } else if (name === "phoneNo" && !/^\d{10}$/.test(value)) {
+      setErrors({ ...errors, phoneNo: "Mobile number must be exactly 10 digits" });
+    } else if (name === "hrPhone" && !/^\d{10}$/.test(value)) {
+      setErrors({ ...errors, hrPhone: "HR mobile number must be exactly 10 digits" });
     } else if (name === "hrEmail" && !/^\S+@\S+\.\S+$/.test(value)) {
       setErrors({ ...errors, hrEmail: "Enter a valid HR email address" });
     } else {
@@ -77,6 +85,7 @@ function InternshipForm() {
 
   const validateForm = () => {
     for (const key in formData) {
+      if (key === "internshipType") continue; // ✅ Local only
       if (formData[key].trim() === "") {
         alert(`${key} is required.`);
         return false;
@@ -94,11 +103,11 @@ function InternshipForm() {
       alert("Email must end with @vnrvjiet.in");
       return false;
     }
-    if (!/^\d{10}$/.test(formData.mobile)) {
+    if (!/^\d{10}$/.test(formData.phoneNo)) {
       alert("Mobile number must be exactly 10 digits.");
       return false;
     }
-    if (!/^\d{10}$/.test(formData.hrMobile)) {
+    if (!/^\d{10}$/.test(formData.hrPhone)) {
       alert("HR Mobile number must be exactly 10 digits.");
       return false;
     }
@@ -111,24 +120,17 @@ function InternshipForm() {
     if (!validateForm()) return;
 
     let durationValue = formData.duration;
-    if (typeof durationValue === 'string') {
-      const match = durationValue.match(/\d+/);
-      durationValue = match ? match[0] : '';
-    }
 
     const rollNo = formData.rollNo;
 
-    // Rename files with rollNo and appropriate suffix
     const renamedOfferFile = offerFile ? new File([offerFile], `${rollNo}_offer.pdf`, { type: offerFile.type }) : null;
-    const renamedApprovalFile = approvalFile ? new File([approvalFile], `${rollNo}_approval.pdf`, { type: approvalFile.type }) : null;
+    const renamedApprovalFile = approvalFile ? new File([approvalFile],` ${rollNo}_approval.pdf`, { type: approvalFile.type }) : null;
     const renamedNocFile = nocFile ? new File([nocFile], `${rollNo}_noc.pdf`, { type: nocFile.type }) : null;
 
     const form = new FormData();
     for (const key in formData) {
-      if (key === 'duration') {
-        form.append(key, durationValue);
-      } else {
-        form.append(key, formData[key]);
+      if (key !== "internshipType") {
+        form.append(key, key === "duration" ? durationValue : formData[key]);
       }
     }
     if (renamedOfferFile) form.append("offerLetter", renamedOfferFile);
@@ -170,7 +172,7 @@ function InternshipForm() {
       <div className="form-container">
         <h1>UG/PG Internship Portal</h1>
         <form className="internship-form" onSubmit={handleSubmit}>
-          {["rollNo", "name", "branch", "section", "email", "mobile", "role", "organization", "hrEmail", "hrMobile", "duration", "pay"].map((field) => (
+          {["rollNo", "name", "branch", "section", "email", "phoneNo", "role", "organizationName", "hrEmail", "hrPhone", "duration", "package"].map((field) => (
             <div className="form-row" key={field}>
               <input
                 type={field === "email" || field === "hrEmail" ? "email" : "text"}
@@ -195,6 +197,15 @@ function InternshipForm() {
           </div>
 
           <div className="form-row">
+            <label>Internship Type</label>
+            <select name="internshipType" value={formData.internshipType} onChange={handleChange} required>
+              <option value="">Select Type</option>
+              <option value="Paid">Paid</option>
+              <option value="Unpaid">Unpaid</option>
+            </select>
+          </div>
+
+          <div className="form-row">
             <label>Start-Date</label>
             <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} required />
           </div>
@@ -204,19 +215,39 @@ function InternshipForm() {
           </div>
 
           <div className="form-row">
-            <label>Upload Offer Letter:
-              <input type="file" accept=".pdf" onChange={(e) => setOfferFile(e.target.files[0])} required />
-            </label>
+            <label>Upload Offer Letter:(eg.rollno_offer.pdf)</label>
+            <div className="custom-file-upload">
+              <label htmlFor="offerFile" className="upload-btn">Choose File</label>
+              <input id="offerFile" type="file" accept=".pdf" style={{ display: "none" }}
+                onChange={(e) => setOfferFile(e.target.files[0])} required />
+              <span className="file-name">
+                {offerFile ? `${formData.rollNo || "ROLLNO"}_offer.pdf` : "No file chosen"}
+              </span>
+            </div>
           </div>
+
           <div className="form-row">
-            <label>Upload Approval Letter:
-              <input type="file" accept=".pdf" onChange={(e) => setApprovalFile(e.target.files[0])} required />
-            </label>
+            <label>Upload Approval Letter:(eg.rollno_approval.pdf)</label>
+            <div className="custom-file-upload">
+              <label htmlFor="approvalFile" className="upload-btn">Choose File</label>
+              <input id="approvalFile" type="file" accept=".pdf" style={{ display: "none" }}
+                onChange={(e) => setApprovalFile(e.target.files[0])} required />
+              <span className="file-name">
+                {approvalFile ? `${formData.rollNo || "ROLLNO"}_approval.pdf` : "No file chosen"}
+              </span>
+            </div>
           </div>
+
           <div className="form-row">
-            <label>Upload NOC:
-              <input type="file" accept=".pdf" onChange={(e) => setNocFile(e.target.files[0])} required />
-            </label>
+            <label>Upload NOC:(eg.rollno_noc.pdf)</label>
+            <div className="custom-file-upload">
+              <label htmlFor="nocFile" className="upload-btn">Choose File</label>
+              <input id="nocFile" type="file" accept=".pdf" style={{ display: "none" }}
+                onChange={(e) => setNocFile(e.target.files[0])} required />
+              <span className="file-name">
+                {nocFile ? `${formData.rollNo || "ROLLNO"}_noc.pdf` : "No file chosen"}
+              </span>
+            </div>
           </div>
 
           <div className="submit-container">

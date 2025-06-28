@@ -19,12 +19,11 @@ router.get('/', async (req, res) => {
 
 // Filter internships with query params including company acronym matching
 router.get('/internships/filter', async (req, res) => {
-  const { type, semester, branch, year, month, endYear, endMonth, company } = req.query;
+  const { type, semester, section, branch, year, month, endYear, endMonth, company } = req.query;
   const today = new Date();
 
   const knownBranches = [
-    "CSE", "IT", "ECE", "EEE", "MECH", "CIVIL",
-    "AI&ML", "AI&DS", "CSBS", "IoT", "AIDS"
+    "CSE", "CSBS"
   ];
 
   const matchesAcronym = (query, name) => {
@@ -88,6 +87,11 @@ router.get('/internships/filter', async (req, res) => {
       }
     }
 
+    // Apply section filter
+    if (section) {
+      students = students.filter(s => s.section === section);
+    }
+
     // Map for fast access
     const studentMap = {};
     students.forEach(s => {
@@ -111,6 +115,7 @@ router.get('/internships/filter', async (req, res) => {
           status,
           semester: student.semester || null,
           branch: student.branch || null,
+          section: student.section || null,
         };
       });
 
@@ -136,19 +141,22 @@ router.patch('/internships/:id/status', async (req, res) => {
 // Get Users with optional semester and section filters
 router.get('/Users', async (req, res) => {
   try {
-    const { semester, branch } = req.query;
+    const { semester, branch, section } = req.query;
 
     const query = {};
     if (semester) query.semester = semester;
 
     const knownBranches = ["CSE", "IT", "ECE", "EEE", "MECH", "CIVIL", "AI&ML", "AI&DS", "CSBS", "IoT", "AIDS"];
-
     if (branch) {
       if (branch === "OTHER") {
-        query.branch = { $nin: knownBranches }; // Not in the known list
+        query.branch = { $nin: knownBranches };
       } else {
         query.branch = branch;
       }
+    }
+
+    if (section) {
+      query.section = section;
     }
 
     const users = await User.find(query);
@@ -157,6 +165,7 @@ router.get('/Users', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Dashboard stats
 router.get('/dashboard-stats', async (req, res) => {
@@ -260,7 +269,7 @@ router.post('/feedbacks', async (req, res) => {
 // Analytics route: branch & semester counts for internships with optional filters
 router.get('/analytics', async (req, res) => {
   try {
-    const { status, year, month } = req.query;
+    const { status, year, month, section } = req.query;
 
     const internships = await Internship.find();
     const users = await User.find();
@@ -273,6 +282,14 @@ router.get('/analytics', async (req, res) => {
     });
 
     const today = new Date();
+
+    const knownBranches = ["CSE", "CSBS"];
+    const branchCounts = {};
+    const semesterCounts = {};
+
+    // Initialize branchCounts
+    knownBranches.forEach(b => branchCounts[b] = 0);
+    branchCounts["Other"] = 0;
 
     const filtered = internships.filter((i) => {
       const roll = i.rollNo?.toUpperCase().trim();
@@ -290,29 +307,11 @@ router.get('/analytics', async (req, res) => {
       if (status && status !== "all" && internshipStatus !== status) return false;
       if (year && start.getFullYear().toString() !== year) return false;
       if (month && (start.getMonth() + 1).toString() !== month) return false;
+      if (section && user.section !== section) return false;
 
-      i.branch = user.branch;
-      i.semester = user.semester;
-      return true;
-    });
-
-    const knownBranches = [
-      "CSE", "IT", "ECE", "EEE", "MECH", "CIVIL",
-      "AI&ML", "AI&DS", "CSBS", "IoT", "AIDS"
-    ];
-
-    const branchCounts = {};
-    const semesterCounts = {};
-
-    // Initialize all known branches with 0
-    knownBranches.forEach(branch => {
-      branchCounts[branch] = 0;
-    });
-    branchCounts["Other"] = 0; // Add "Other"
-
-    filtered.forEach((item) => {
-      const branch = item.branch || "Unknown";
-      const semester = item.semester || "Unknown";
+      // Collect into counts
+      const branch = user.branch || "Unknown";
+      const semester = user.semester || "Unknown";
 
       if (knownBranches.includes(branch)) {
         branchCounts[branch]++;
@@ -321,18 +320,20 @@ router.get('/analytics', async (req, res) => {
       }
 
       semesterCounts[semester] = (semesterCounts[semester] || 0) + 1;
+
+      return true;
     });
 
     res.json({
       branchData: Object.entries(branchCounts).map(([branch, count]) => ({ branch, count })),
-      semesterData: Object.entries(semesterCounts).map(([semester, count]) => ({ semester, count })),
+      semesterData: Object.entries(semesterCounts).map(([semester, count]) => ({ semester, count }))
     });
+
   } catch (err) {
     console.error("Analytics Error:", err);
     res.status(500).json({ message: "Server Error" });
   }
 });
-
 
 // Get User + their internships by roll number
 router.get('/roll/:rollNo', async (req, res) => {

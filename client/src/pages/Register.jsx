@@ -9,6 +9,7 @@ export default function Register() {
     email: '',
     branch: '',
     semester: '',
+    section: '',
     password: '',
     confirmPassword: '',
   });
@@ -17,6 +18,7 @@ export default function Register() {
   const navigate = useNavigate();
 
   const semesterOptions = ['1-1', '2-1', '2-2', '3-1', '3-2', '4-1', '4-2'];
+  const filterOptions = ['A', 'B', 'C','D'];
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -139,6 +141,21 @@ export default function Register() {
             {semesterOptions.map((sem, idx) => (
               <option key={idx} value={sem}>
                 {sem}
+              </option>
+            ))}
+          </select>
+
+          <select
+            name="section"
+            value={form.section}
+            onChange={handleChange}
+            className="form-control mb-3"
+            disabled={loading}
+          >
+            <option value="">Select section</option>
+            {filterOptions.map((opt, idx) => (
+              <option key={idx} value={opt}>
+                {opt}
               </option>
             ))}
           </select>

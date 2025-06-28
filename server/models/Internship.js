@@ -17,6 +17,7 @@ const InternshipSchema = new mongoose.Schema({
   package: Number,
   semester: String,
   branch: String,   
+  section:String,
   status: { type: String, default: "Pending" },
 });
 

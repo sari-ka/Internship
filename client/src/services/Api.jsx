@@ -42,9 +42,9 @@ export const updateInternshipStatus = async (id, status) => {
 =========================== */
 export const registerUser = async (form) => {
   try {
-    const { rollNo, name, email, branch, semester, password } = form;
+    const { rollNo, name, email, section,branch, semester, password } = form;
     const res = await axios.post(`${AUTH_BASE_URL}/register`, {
-      rollNo, name, email, branch, semester, password
+      rollNo, name, email, section,branch, semester, password
     });
     return res.data;
   } catch (err) {

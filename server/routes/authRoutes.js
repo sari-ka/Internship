@@ -7,11 +7,11 @@ const JWT_SECRET = 'your_jwt_secret_key'; // Use process.env.JWT_SECRET in produ
 
 // ✅ Register Route
 router.post('/register', async (req, res) => {
-  const { rollNo, name, branch, semester, password } = req.body;
+  const { rollNo, name, branch, semester, password, section } = req.body;
   const email = req.body.email.toLowerCase().trim();
 
   try {
-    if (!rollNo || !name || !email || !branch || !semester || !password) {
+    if (!rollNo || !name || !email || !branch || !semester || !password || !section) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
@@ -22,14 +22,14 @@ router.post('/register', async (req, res) => {
 
     console.log('Registering user with email:', email);
 
-    // Remove manual hashing, let User model pre-save hook handle it
     const user = new User({
       rollNo,
       name,
       email,
       branch,
       semester,
-      password: password,
+      section, // ✅ Fixed here
+      password,
       role: 'student',
     });
 
@@ -41,6 +41,7 @@ router.post('/register', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 
 // ✅ Login Route
 router.post('/login', async (req, res) => {

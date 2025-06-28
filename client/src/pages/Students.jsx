@@ -6,7 +6,8 @@ const Students = () => {
   const [students, setStudents] = useState([]);
   const [filters, setFilters] = useState({
     semester: "",
-    branch: ""
+    branch: "",
+    section: "",
   });
   const [showModal, setShowModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -71,18 +72,20 @@ const Students = () => {
         >
           <option value="">Select Branch</option>
           <option value="CSE">CSE</option>
-          <option value="IT">IT</option>
-          <option value="ECE">ECE</option>
-          <option value="EEE">EEE</option>
-          <option value="MECH">MECH</option>
-          <option value="CIVIL">CIVIL</option>
-          <option value="AI&ML">AI&ML</option>
-          <option value="AI&DS">AI&DS</option>
           <option value="CSBS">CSBS</option>
-          <option value="IoT">IoT</option>
-          <option value="AIDS">AIDS</option>
-          <option value="OTHER">Other</option>
         </select>
+        <select
+          name="section"
+          onChange={handleChange}
+          value={filters.section}
+          className="form-select custom-select-responsive w-auto ms-3 mb-2"
+        >
+          <option value="">Select Section</option>
+          {["A", "B", "C", "D"].map((sec) => (
+            <option key={sec} value={sec}>{sec}</option>
+          ))}
+        </select>
+
       </div>
 
       <table className="styled-table">
@@ -93,6 +96,7 @@ const Students = () => {
             <th>Email</th>
             <th>Branch</th>
             <th>Semester</th>
+            <th>Section</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -103,6 +107,7 @@ const Students = () => {
               <td>{student.name}</td>
               <td>{student.email}</td>
               <td>{student.branch}</td>
+              <td>{student.section}</td>
               <td>{student.semester}</td>
               <td>
                 <button
@@ -148,6 +153,7 @@ const Students = () => {
       <p>Email: {selectedStudent.user.email}</p>
       <p>Roll No: {selectedStudent.user.rollNo}</p>
       <p>Semester: {selectedStudent.user.semester}</p>
+      <p>Section: {selectedStudent.user.section}</p>
 
       <h4 className="mt-3">Internships:</h4>
       {selectedStudent.internships.length === 0 ? (

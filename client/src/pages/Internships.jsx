@@ -8,6 +8,7 @@ const Internships = () => {
     type: "",
     semester: "",
     section: "",
+    branch: "",
     year: "",
     month: "",
     endMonth: "",
@@ -56,6 +57,58 @@ const Internships = () => {
     fetchInternships();
   };
 
+  const generateSummary = () => {
+  if (internships.length === 0) return "No matching internships found.";
+
+  const count = internships.length;
+  const {
+    year,
+    endYear,
+    month,
+    endMonth,
+    branch,
+    semester,
+    section,
+    type,
+    company,
+  } = filters;
+
+  const parts = [];
+
+  // Add status
+  if (type) {
+    parts.push(`are ${type === "future" ? "going to do" : type === "ongoing" ? "currently doing" : "done"} internships`);
+  } else {
+    parts.push("have internships");
+  }
+
+  // Add company
+  if (company) {
+    parts.push(`at companies matching "${company}"`);
+  }
+
+  // Add years and months
+  if (year && endYear) {
+    parts.push(`that started in ${year} and end in ${endYear}`);
+  } else if (year) {
+    parts.push(`starting in ${year}`);
+  } else if (endYear) {
+    parts.push(`ending in ${endYear}`);
+  }
+
+  if (month && endMonth) {
+    parts.push(`between ${month} and ${endMonth}`);
+  }
+
+  // Add semester/branch/section
+  if (semester) parts.push(`from semester ${semester}`);
+  if (branch) parts.push(`from ${branch}`);
+  if (section) parts.push(`from section ${section}`);
+
+  return `There ${count === 1 ? "is" : "are"} ${count} student${count > 1 ? "s" : ""} who ${parts.join(", ")}.`;
+};
+
+
   const handleClear = () => {
   const cleared = {
     type: "",
@@ -101,7 +154,11 @@ const Internships = () => {
           {showFilters ? "Hide Filters" : "Show Filters"}
         </button>
       </div>
-
+      {internships.length > 0 && (
+        <div className="alert alert-warning text-center mb-4">
+          {generateSummary()}
+        </div>
+      )}
       {showFilters && (
         <div className="card shadow-sm mb-5 filter-card">
           <div className="card-body">
@@ -154,10 +211,20 @@ const Internships = () => {
                 >
                   <option value="">All Branches</option>
                   {[
-                    "CSE", "IT", "ECE", "EEE", "MECH", "CIVIL",
-                    "AI&ML", "AI&DS", "CSBS", "IoT", "AIDS", "Other"
+                    "CSE", "CSBS"
                   ].map(branch => (
                     <option key={branch} value={branch}>{branch}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Section */}
+              <div className="col-md-3">
+                <label className="form-label">Section</label>
+                <select className="form-select" name="section" value={filters.section} onChange={handleChange}>
+                  <option value="">All Sections</option>
+                  {["A", "B", "C", "D"].map(sec => (
+                    <option key={sec} value={sec}>{sec}</option>
                   ))}
                 </select>
               </div>
@@ -244,6 +311,7 @@ const Internships = () => {
                   <th>Status</th>
                   <th>Semester</th>
                   <th>Branch</th>
+                  <th>Section</th>
                   <th>Documents</th>
                 </tr>
               </thead>
@@ -258,6 +326,7 @@ const Internships = () => {
                     <td>{renderStatusBadge(i.status)}</td>
                     <td>{i.semester || "-"}</td>
                     <td>{i.branch || "-"}</td>
+                    <td>{i.section || "-"}</td>
                     <td className="docs">
                       {i.applicationLetter && (
                         <a

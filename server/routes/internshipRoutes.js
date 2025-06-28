@@ -26,6 +26,11 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // POST: Submit internship form with file uploads
+const parseDuration = (str) => {
+  const match = str.match(/(\d+(?:\.\d+)?)/); // Extract first float-like number
+  return match ? parseFloat(match[1]) : 0;
+};
+
 router.post('/submit', upload.fields([
   { name: 'offerLetter', maxCount: 1 },
   { name: 'applicationLetter', maxCount: 1 },
@@ -44,24 +49,28 @@ router.post('/submit', upload.fields([
       semester: body.semester,
       section: body.section,
       email: body.email,
-      phoneNo: body.mobile,
+      phoneNo: body.mobile || body.phoneNo,
       role: body.role,
-      organizationName: body.organization,
+      organizationName: body.organizationName,
       hrEmail: body.hrEmail,
-      hrPhone: Number(body.hrMobile),
-      duration: body.duration,
-      package: body.pay,
-      startingDate: body.startDate,
-      endingDate: body.endDate,
+      hrPhone: Number(body.hrMobile || body.hrPhone),
+      duration: parseDuration(body.duration), // ✅ safely convert string like '3 months'
+      package: Number(body.package),
+      startingDate: new Date(body.startDate),
+      endingDate: new Date(body.endDate),
       offerLetter: req.files['offerLetter'] ? `/uploads/${req.files['offerLetter'][0].filename}` : undefined,
       applicationLetter: req.files['applicationLetter'] ? `/uploads/${req.files['applicationLetter'][0].filename}` : undefined,
       noc: req.files['noc'] ? `/uploads/${req.files['noc'][0].filename}` : undefined,
     };
 
-    // Validate required fields
+    // ✅ Validate required fields
     const requiredFields = ['rollNo', 'name', 'branch', 'semester', 'email', 'role', 'organizationName', 'hrEmail', 'duration', 'package'];
     for (const field of requiredFields) {
-      if (!internshipData[field]) {
+      if (
+        internshipData[field] === undefined ||
+        internshipData[field] === null ||
+        internshipData[field] === ''
+      ) {
         console.error(`Missing required field: ${field}`);
         return res.status(400).json({ error: `Missing required field: ${field}` });
       }
@@ -71,12 +80,14 @@ router.post('/submit', upload.fields([
     await newInternship.save();
 
     res.status(201).json({ message: 'Internship submitted successfully' });
+
   } catch (error) {
     console.error('Internship submission error:', error.message);
     console.error(error.stack);
     res.status(500).json({ error: 'Failed to save internship data' });
   }
 });
+
 
 // GET: Fetch all submitted internships
 router.get('/all', async (req, res) => {

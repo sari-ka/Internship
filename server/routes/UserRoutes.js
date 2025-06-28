@@ -50,21 +50,44 @@ router.get('/profile', verifyApiKey, async (req, res) => {
   try {
     if (req.student) {
       const student = req.student;
-      console.log(req.student)
+      console.log(student)
       const internships = await Internship.find({ rollNo: student.rollNo });
-      let feedbacks = await Feedback.find({ rollNo: student.rollNo });
+      let feedbacks = await Feedback.find({ rollNo: student.rollNo});
+
       // Enrich feedbacks with organizationName from internships
       feedbacks = feedbacks.map(feedback => {
-      const internship = internships.find(i => i.rollNo === feedback.rollNo);
+        const internship = internships.find(i => i.rollNo === feedback.rollNo);
         return {
           ...feedback.toObject(),
           organizationName: internship ? internship.organizationName : 'Unknown Organization'
         };
       });
 
+      // Include role and organizationName explicitly in internships response
+      const internshipsWithDetails = internships.map(internship => ({
+        _id: internship._id,
+        internshipID: internship.internshipID,
+        startingDate: internship.startingDate,
+        endingDate: internship.endingDate,
+        offerLetter: internship.offerLetter,
+        applicationLetter: internship.applicationLetter,
+        noc: internship.noc,
+        rollNo: internship.rollNo,
+        role: internship.role,
+        organizationName: internship.organizationName,
+        hrName: internship.hrName,
+        hrEmail: internship.hrEmail,
+        hrPhone: internship.hrPhone,
+        duration: internship.duration,
+        package: internship.package,
+        semester: internship.semester,
+        branch: internship.branch,
+        status: internship.status,
+      }));
+
       res.json({
         student,
-        internships,
+        internships: internshipsWithDetails,
         feedbacks,
       });
     } else if (req.user) {

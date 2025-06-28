@@ -1,18 +1,20 @@
 import pandas as pd
 from pymongo import MongoClient
-import re
 import bcrypt
+import re
+import uuid
 
-# ✅ Load Excel and clean headers
+# ✅ Load Excel
 df = pd.read_excel(r"C:\Users\A SARIKA REDDY\Downloads\2024-25 - Internship.xlsx")
 df.columns = df.columns.str.strip().str.replace("\n", " ").str.replace("  ", " ", regex=False)
 
-# ✅ MongoDB connection
+# ✅ Connect to MongoDB
 client = MongoClient("mongodb://localhost:27017")
 db = client["internship"]
-users_collection = db["users"]  # Use "users" collection as per your Mongoose schema
+users_collection = db["users"]
+internships_collection = db["internships"]
 
-# ✅ Function to safely get value
+# ✅ Safe value getter
 def get_safe_value(row, column, default=None):
     value = row.get(column, default)
     if pd.isna(value):
@@ -21,42 +23,93 @@ def get_safe_value(row, column, default=None):
         return value.strip()
     return value
 
-# ✅ Clean data and drop duplicates
+# ✅ Extract numeric value (for duration/package)
+def extract_numeric(value):
+    if not value:
+        return 0.0
+    match = re.search(r"\b\d+(?:\.\d+)?\b", str(value))
+    if match:
+        try:
+            return float(match.group())
+        except:
+            return 0.0
+    return 0.0
+
+# ✅ Clean and deduplicate users
 df_cleaned = df.dropna(subset=["Roll No.", "Name of the Student", "Email-id of student"], how="any")
 df_cleaned = df_cleaned[df_cleaned["Roll No."].astype(str).str.strip() != ""]
 df_cleaned.drop_duplicates(subset="Roll No.", inplace=True)
 
-# ✅ Default password (hashed as per Mongoose pre-save logic)
+# ✅ Hashed password
 default_password = "vnrvjiet"
 hashed_password = bcrypt.hashpw(default_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-# ✅ Map User Document
+# ✅ Prepare user documents
 def map_user(row):
     return {
         "rollNo": get_safe_value(row, "Roll No."),
         "name": get_safe_value(row, "Name of the Student"),
         "semester": get_safe_value(row, "Semester"),
+        "section": get_safe_value(row, "Section"),  # ✅ Section added
         "email": get_safe_value(row, "Email-id of student"),
         "branch": get_safe_value(row, "Branch"),
         "password": hashed_password,
         "role": "student"
     }
 
-# ✅ Apply mapping
 users_all = df_cleaned.apply(map_user, axis=1).tolist()
 
-# ✅ Avoid duplicates by rollNo or email
+# ✅ Filter only new users
 existing_rolls = set(x.get("rollNo") for x in users_collection.find({}, {"rollNo": 1}) if x.get("rollNo"))
 existing_emails = set(x.get("email") for x in users_collection.find({}, {"email": 1}) if x.get("email"))
-
 users_to_insert = [u for u in users_all if u["rollNo"] not in existing_rolls and u["email"] not in existing_emails]
 
-# ✅ Insert into MongoDB
-try:
-    if users_to_insert:
-        users_collection.insert_many(users_to_insert, ordered=False)
-        print(f"✅ Inserted {len(users_to_insert)} new users. [Source: asarikareddy]")
-    else:
-        print("ℹ️ No new users to insert.")
-except Exception as e:
-    print(f"❌ Error during insertion: {e}")
+# ✅ Insert users
+if users_to_insert:
+    users_collection.insert_many(users_to_insert, ordered=False)
+    print(f"✅ Inserted {len(users_to_insert)} users.")
+else:
+    print("ℹ️ No new users to insert.")
+
+# ✅ Prepare internship documents
+def map_internship(row):
+    roll_no = get_safe_value(row, "Roll No.")
+    try:
+        start = pd.to_datetime(get_safe_value(row, "Starting Date"))
+    except:
+        start = None
+    try:
+        end = pd.to_datetime(get_safe_value(row, "Ending Date"))
+    except:
+        end = None
+
+    return {
+        "internshipID": str(uuid.uuid4()),
+        "rollNo": roll_no,
+        "startingDate": start,
+        "endingDate": end,
+        "offerLetter": f"{roll_no}_ol.pdf",
+        "applicationLetter": f"{roll_no}_iapp.pdf",
+        "noc": f"{roll_no}_inoc.pdf",
+        "role": get_safe_value(row, "Role of student in Company"),
+        "organizationName": get_safe_value(row, "Name of the Organization for Internship"),
+        "hrName": get_safe_value(row, "HR-Name or Name of the Point of Contact"),
+        "hrEmail": get_safe_value(row, "email-id of point of contact in the organization of internship"),
+        "hrPhone": get_safe_value(row, "Mobile Number of point of contact in the organization of internship"),
+        "duration": extract_numeric(get_safe_value(row, "Duration of Internship - Ex: 1 Month, 2 Months, 1.5 Months, 2.5 Months")),
+        "package": extract_numeric(get_safe_value(row, "Pay Package per month Eg: 15000, 20000 etc.")),
+        "semester": get_safe_value(row, "Semester"),
+        "branch": get_safe_value(row, "Branch"),
+        "section": get_safe_value(row, "Section"),  # ✅ Section added
+        "status": "Pending"
+    }
+
+# ✅ Create internships list
+internships_all = df_cleaned.apply(map_internship, axis=1).tolist()
+
+# ✅ Insert internships (no filter)
+if internships_all:
+    internships_collection.insert_many(internships_all, ordered=False)
+    print(f"✅ Inserted {len(internships_all)} internships.")
+else:
+    print("ℹ️ No internships to insert.")

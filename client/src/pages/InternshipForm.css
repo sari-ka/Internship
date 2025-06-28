@@ -123,3 +123,32 @@ label {
   font-weight: bold;
 }
 
+.file-name-preview {
+  font-size: 14px;
+  color: #333;
+  margin-top: 5px;
+  font-style: italic;
+}
+.custom-file-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.upload-btn:hover {
+  background-color: #0056b3;
+}
+
+.file-name {
+  font-size: 0.9rem;
+  color: #333;
+}

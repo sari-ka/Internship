@@ -46,7 +46,7 @@ export default function Profile() {
     label: { fontWeight: 600, color: '#212529' },
     value: { marginLeft: '8px', color: '#495057' },
     card: {
-      maxWidth: '600px',
+      maxWidth: '800px',
       width: '100%',
       borderRadius: '1rem',
       padding: '2rem',
@@ -65,11 +65,6 @@ export default function Profile() {
         }
       }
     `
-  };
-
-  const getField = (field) => {
-    if (!userProfile) return '';
-    return userProfile?.student?.[field] ?? userProfile?.[field] ?? '—';
   };
 
   return (
@@ -115,17 +110,18 @@ export default function Profile() {
             </ul>
 
             <div className="tab-content" id="profileTabsContent">
-              {/* DETAILS TAB */}
+
+              {/* === Student Details === */}
               <div className="tab-pane fade show active" id="details">
                 <div className="d-flex justify-content-center">
                   <div style={styles.card}>
                     <h5 className="text-center mb-3">👤 Student Details</h5>
                     {[
-                      { label: "Name", value: getField("name") },
-                      { label: "Roll No", value: getField("rollNo") || getField("rollNo") },
-                      { label: "Email", value: getField("email") },
-                      { label: "Branch", value: getField("branch") },
-                      { label: "Semester", value: getField("semester") },
+                      { label: "Name", value: userProfile.student ? userProfile.student.name : userProfile.user.name },
+                      { label: "Roll No", value: userProfile.student ? (userProfile.student.rollNo || userProfile.user.rollNo) : userProfile.user.rollNo },
+                      { label: "Email", value: userProfile.student ? userProfile.student.email : userProfile.user.email },
+                      { label: "Branch", value: userProfile.student ? userProfile.student.branch : userProfile.user.branch },
+                      { label: "Semester", value: userProfile.student ? userProfile.student.semester : userProfile.user.semester },
                     ].map((item, i) => (
                       <div key={i} style={{ marginBottom: '0.75rem' }}>
                         <span style={styles.label}>{item.label}:</span>
@@ -136,40 +132,98 @@ export default function Profile() {
                 </div>
               </div>
 
-              {/* INTERNSHIPS TAB */}
+              {/* === Internships === */}
               <div className="tab-pane fade" id="internships">
-                <div className="d-flex justify-content-center">
-                  <div style={styles.card}>
-                    <h5 className="text-center mb-3">🔖 Your Internships</h5>
-                    {(userProfile.internships || []).length > 0 ? (
-                      <ul className="list-group list-group-flush">
-                        {userProfile.internships.map((internship) => (
-                          <li key={internship._id || internship.internshipID} className="list-group-item">
-                            <strong>{internship.organizationName}</strong> - {internship.role}<br />
-                            <small>
-                              {new Date(internship.startingDate).toLocaleDateString()} to{" "}
-                              {new Date(internship.endingDate).toLocaleDateString()}
-                            </small>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-muted text-center">No internships found.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
+  <div className="d-flex justify-content-center">
+    <div style={styles.card}>
+      <h5 className="text-center mb-3">🔖 Your Internships</h5>
+      {(userProfile.internships || []).length > 0 ? (
+        <ul className="list-group list-group-flush">
+          {(userProfile.internships || []).map((internship) => (
+            <li key={internship._id || internship.internshipID} className="list-group-item">
+              <strong>Company-{internship.organizationName}<br/></strong>
+              <strong>Role-{internship.role}</strong><br />
+              <small>
+                <strong>{new Date(internship.startingDate).toLocaleDateString()}</strong> to{" "}
+                <strong>{new Date(internship.endingDate).toLocaleDateString()}</strong>
+              </small>
 
-              {/* FEEDBACK TAB */}
+              <div className="mt-3 d-flex flex-wrap gap-4">
+                Files:
+                {internship.offerLetter && (
+                  <div className="text-center">
+                    <div>Offer Letter</div>
+                    <a
+                      href={`http://localhost:5000${internship.offerLetter}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg"
+                        alt="Offer Letter"
+                        style={{ width: '50px', height: '50px', cursor: 'pointer' }}
+                      />
+                    </a>
+                  </div>
+                )}
+
+                {internship.applicationLetter && (
+                  <div className="text-center">
+                    <div>Approval Letter</div>
+                    <a
+                      href={`http://localhost:5000${internship.applicationLetter}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg"
+                        alt="Approval Letter"
+                        style={{ width: '50px', height: '50px', cursor: 'pointer' }}
+                      />
+                    </a>
+                  </div>
+                )}
+
+                {internship.noc && (
+                  <div className="text-center">
+                    <div>NOC</div>
+                    <a
+                      href={`http://localhost:5000${internship.noc}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg"
+                        alt="NOC"
+                        style={{ width: '50px', height: '50px', cursor: 'pointer' }}
+                      />
+                    </a>
+                  </div>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-muted text-center">No internships found.</p>
+      )}
+    </div>
+  </div>
+</div>
+
+
+              {/* === Feedback === */}
               <div className="tab-pane fade" id="feedbacks">
                 <div className="d-flex justify-content-center">
                   <div style={styles.card}>
                     <h5 className="text-center mb-3">🗒 Your Feedback</h5>
                     {(userProfile.feedbacks || []).length > 0 ? (
                       <ul className="list-group list-group-flush">
-                        {userProfile.feedbacks.map((feedback) => (
+                        {(userProfile.feedbacks || []).map((feedback) => (
                           <li key={feedback._id} className="list-group-item">
-                            <strong>{feedback.title || "Feedback"}</strong> for <em>{feedback.organizationName || "Unknown"}</em>:<br />
+                            <strong>{feedback.title || "Feedback"}</strong> for{" "}
+                            <em>{feedback.organizationName || "Unknown Organization"}</em>:
+                            <strong>{" submitted "}</strong>
                             {feedback.content || feedback.feedback}
                           </li>
                         ))}
@@ -180,6 +234,7 @@ export default function Profile() {
                   </div>
                 </div>
               </div>
+
             </div>
           </>
         )}
