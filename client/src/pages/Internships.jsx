@@ -312,6 +312,8 @@ const Internships = () => {
                   <th>Semester</th>
                   <th>Branch</th>
                   <th>Section</th>
+                  <th>Hr mail</th>
+                  <th>Hr phone</th>
                   <th>Documents</th>
                 </tr>
               </thead>
@@ -327,6 +329,8 @@ const Internships = () => {
                     <td>{i.semester || "-"}</td>
                     <td>{i.branch || "-"}</td>
                     <td>{i.section || "-"}</td>
+                    <td>{i.hrEmail || "-"}</td>
+                    <td>{i.hrPhone || "-"}</td>
                     <td className="docs">
                       {i.applicationLetter && (
                         <a

@@ -61,49 +61,53 @@ export default function HomePage() {
       </div>
 
       {/* 🟢 MAIN CONTENT */}
-      <div className="homepage-main-content">
-        <h2 className="homepage-subtitle">Welcome to the UG/PG Internship Portal</h2>
+      <div className="main-content">
+        <h2 className="subtitle">Welcome to the UG/PG Internship Portal</h2>
 
-        {/* You can uncomment the profile section here if needed */}
+      
+      <div className="options-grid">
+  <div className="card-row">
+    <div className="card">
+      <h2>📄 Document Templates</h2>
+      <div className="document-section">
+        <a href="https://1drv.ms/w/c/2879c4145659eca3/Eb8zShUuKh5DkSOYfKHjqmYBha4v2ZXP36wrE8jcg-SccA?e=4QXPb5" download>
+          Letter of Recommendation
+        </a>
+      </div>
+      <div className="document-section">
+        <a href="https://1drv.ms/w/c/2879c4145659eca3/ETHRdK_La15KigY-Go9GHy0BQu9tEzCa5KRZvMqh-UH6XQ?e=CIhyHU" download>
+          No Objection Certificate (NOC)
+        </a>
+      </div>
+      <div className="document-section">
+        <a href="https://1drv.ms/w/c/2879c4145659eca3/EQvdYq2rlxdDlQm7PJJOk_8B1SO-aZFyH72X8V-YH1k_GQ?e=DS1vVT" download>
+          VNR Bonafide by HOD 
+        </a>
+      </div>
+      <div className="document-section">
+        <a href="https://1drv.ms/w/c/2879c4145659eca3/EQvdYq2rlxdDlQm7PJJOk_8B1SO-aZFyH72X8V-YH1k_GQ?e=g4xfNz" download>
+          VNR CSE Internship Rules
+        </a>
+      </div>
+    </div>
+  </div>
 
-        <div className="homepage-options-grid">
-          <div className="homepage-card-row">
-            <div className="homepage-card">
-              <h2>📄 Document Templates</h2>
-              <div className="document-section">
-                <a href="" download>
-                  Letter of Recommendation
-                </a>
-              </div>
-              <div className="document-section">
-                <a href="" download>
-                  No Objection Certificate (NOC)
-                </a>
-              </div>
-              <div className="document-section">
-                <a href="" download>
-                  VNR Bonafide by HOD 
-                </a>
-              </div>
-              <div className="document-section">
-                <a href="" download>
-                  VNR CSE Internship Rules
-                </a>
-              </div>
-            </div>
-          </div>
+  <div className="card-row center-row">
+    <div className="card">
+      <h2>📝 Apply</h2>
+      <button onClick={() => navigate('/apply')}>Fill Application Form</button>
+    </div>
+    <div className="card">
+      <h2>📤 Submit Feedback</h2>
+      <button onClick={() => navigate('/upload')}>Upload Feedback Form</button>
+    </div>
+  </div>
+</div>
 
-          <div className="homepage-card-row homepage-center-row">
-            <div className="homepage-card">
-              <h2>📝 Apply</h2>
-              <button onClick={() => navigate('/apply')}>Fill Application Form</button>
-            </div>
-            <div className="homepage-card">
-              <h2>📤 Submit Feedback</h2>
-              <button onClick={() => navigate('/upload')}>Upload Feedback Form</button>
-            </div>
-          </div>
-        </div>
+       
+            
+           
+       
       </div>
     </div>
   );

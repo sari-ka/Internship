@@ -1,25 +1,23 @@
-// src/pages/Landing.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+// import './Lanxding.css';
 
 const Landing = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="container-fluid px-0">
-      {/* Header */}
-      <header className="d-flex align-items-center px-4 py-3 shadow-sm bg-white">
+    <div className="landing-container">
+      {/* 🔵 HEADER */}
+      <div className="header d-flex align-items-center mb-4 p-3">
         <img
-          src="https://upload.wikimedia.org/wikipedia/en/e/e5/Official_logo_of_VNRVJIET.png" // replace if you have a local logo
-          alt="VNRVJIET Logo"
-          style={{ height: '60px', marginRight: '15px' }}
+          src="https://media.licdn.com/dms/image/v2/C560BAQFKt8O5GdaFjw/company-logo_200_200/company-logo_200_200/0/1680080095222/vnr_vignanajyothiinstituteofengineeringandtechnology_logo?e=2147483647&v=beta&t=nV3OFiSPyeDZdeZib-pHBlNwN-i1S73KwQljcRw3FvY"
+          alt="VNR Vignana Jyothi Logo"
+          style={{ width: '80px', height: '80px', marginRight: '15px' }}
         />
-        <div>
-          <h5 className="mb-0 fw-bold">VNR Vignana Jyothi Institute of Engineering and Technology</h5>
-        </div>
-      </header>
+        <h1 className="mb-0">VNR Vignana Jyothi Institute of Engineering and Technology</h1>
+      </div>
 
-      {/* Main Content */}
+      {/* 🟢 Main Content */}
       <div className="d-flex flex-column align-items-center justify-content-center mt-5">
         <h1 className="text-center mb-3 fw-bold">Welcome to the InternE</h1>
         <p className="text-center text-muted mb-5 fs-5">Please select your role to continue</p>
@@ -33,9 +31,9 @@ const Landing = () => {
           >
             <img
               src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-              className="card-img-top p-3"
+              className="card-img-top p-2"
               alt="Admin"
-              style={{ height: '230px', objectFit: 'contain' }}
+              style={{ height: '200px', objectFit: 'contain' }}
             />
             <div className="card-body text-center">
               <h5 className="card-title">Admin Login</h5>
@@ -52,14 +50,33 @@ const Landing = () => {
           >
             <img
               src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png"
-              className="card-img-top p-3"
+              className="card-img-top p-2"
               alt="Student"
-              style={{ height: '230px', objectFit: 'contain' }}
+              style={{ height: '200px', objectFit: 'contain' }}
             />
             <div className="card-body text-center">
               <h5 className="card-title">Student Login</h5>
               <p className="card-text text-muted">For VNRVJIET students.</p>
               <button className="btn btn-success">Login as Student</button>
+            </div>
+          </div>
+
+          {/* Guest Card */}
+          <div
+            className="card shadow-lg"
+            style={{ width: '22rem', cursor: 'pointer' }}
+            onClick={() => navigate('/guest-login')}
+          >
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+              className="card-img-top p-2"
+              alt="Guest"
+              style={{ height: '200px', objectFit: 'contain' }}
+            />
+            <div className="card-body text-center">
+              <h5 className="card-title">Guest Login</h5>
+              <p className="card-text text-muted">For visitors and recruiters.</p>
+              <button className="btn btn-warning">Login as Guest</button>
             </div>
           </div>
         </div>
