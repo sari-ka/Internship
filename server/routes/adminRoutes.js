@@ -19,12 +19,21 @@ router.get('/', async (req, res) => {
 
 // Filter internships with query params including company acronym matching
 router.get('/internships/filter', async (req, res) => {
-  const { type, semester, section, branch, year, month, endYear, endMonth, company } = req.query;
+  const {
+    type,
+    semester,
+    section,
+    branch,
+    year,        // start year
+    month,       // start month
+    endYear,     // end year
+    endMonth,    // end month
+    company
+  } = req.query;
+
   const today = new Date();
 
-  const knownBranches = [
-    "CSE", "CSBS"
-  ];
+  const knownBranches = ["CSE", "CSBS"];
 
   const matchesAcronym = (query, name) => {
     const acronym = name
@@ -36,49 +45,54 @@ router.get('/internships/filter', async (req, res) => {
 
   try {
     let dateQuery = {};
+
+    // 🔹 Add status-based filtering
     if (type === 'ongoing') {
-      dateQuery = { startingDate: { $lte: today }, endingDate: { $gte: today } };
+      dateQuery = {
+        startingDate: { $lte: today },
+        endingDate: { $gte: today }
+      };
     } else if (type === 'past') {
-      dateQuery = { endingDate: { $lt: today } };
+      dateQuery = {
+        endingDate: { $lt: today }
+      };
     } else if (type === 'future') {
-      dateQuery = { startingDate: { $gt: today } };
+      dateQuery = {
+        startingDate: { $gt: today }
+      };
     }
 
+    // 🔹 Fetch all internships based on type filter
     let internships = await Internship.find(dateQuery);
 
-    // Filter by starting date year and month
-    if (year) {
-      internships = internships.filter(i => new Date(i.startingDate).getFullYear().toString() === year);
-    }
-    if (month) {
-      internships = internships.filter(i => (new Date(i.startingDate).getMonth() + 1).toString() === month);
+    // 🔹 Apply start date range (FROM)
+    if (year && month) {
+      const fromDate = new Date(Number(year), Number(month) - 1, 1);
+      internships = internships.filter(i => new Date(i.startingDate) >= fromDate);
     }
 
-    // Filter by ending date year and month
-    if (endYear) {
-      internships = internships.filter(i => new Date(i.endingDate).getFullYear().toString() === endYear);
-    }
-    if (endMonth) {
-      internships = internships.filter(i => (new Date(i.endingDate).getMonth() + 1).toString() === endMonth);
+    // 🔹 Apply end date range (TO)
+    if (endYear && endMonth) {
+      const toDate = new Date(Number(endYear), Number(endMonth), 0); // last day of end month
+      internships = internships.filter(i => new Date(i.startingDate) <= toDate);
     }
 
-    // Filter by company name or acronym
+    // 🔹 Filter by company name or acronym
     if (company) {
-      internships = internships.filter(i => {
-        const regex = new RegExp(company, 'i');
-        return regex.test(i.organizationName) || matchesAcronym(company, i.organizationName);
-      });
+      const regex = new RegExp(company, 'i');
+      internships = internships.filter(i =>
+        regex.test(i.organizationName) || matchesAcronym(company, i.organizationName)
+      );
     }
 
-    // Fetch all students first
+    // 🔹 Fetch all students
     let students = await User.find();
-    
-    // Apply semester filter
+
+    // 🔹 Apply student filters
     if (semester) {
       students = students.filter(s => s.semester === semester);
     }
 
-    // Apply branch filter with "Other" logic
     if (branch) {
       if (branch === "Other") {
         students = students.filter(s => !knownBranches.includes(s.branch));
@@ -87,18 +101,17 @@ router.get('/internships/filter', async (req, res) => {
       }
     }
 
-    // Apply section filter
     if (section) {
       students = students.filter(s => s.section === section);
     }
 
-    // Map for fast access
+    // 🔹 Build rollNo map for quick lookup
     const studentMap = {};
     students.forEach(s => {
       studentMap[s.rollNo] = s;
     });
 
-    // Final filter
+    // 🔹 Final matching
     const filteredInternships = internships
       .filter(i => studentMap[i.rollNo])
       .map(i => {
@@ -106,6 +119,7 @@ router.get('/internships/filter', async (req, res) => {
         const start = new Date(i.startingDate);
         const end = new Date(i.endingDate);
         let status = "";
+
         if (today < start) status = "future";
         else if (today > end) status = "past";
         else status = "ongoing";
@@ -115,7 +129,7 @@ router.get('/internships/filter', async (req, res) => {
           status,
           semester: student.semester || null,
           branch: student.branch || null,
-          section: student.section || null,
+          section: student.section || null
         };
       });
 
@@ -414,4 +428,16 @@ router.get('/add', async (req, res) => {
     res.status(500).send('Server error'.admin);
   }
 });
+
+router.delete("/internships/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Internship.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ message: "Internship not found" });
+    res.json({ message: "Internship deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

@@ -9,6 +9,11 @@ export default function Profile() {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const convertDriveLink = (url) => {
+  if (!url) return null;
+  const match = url.match(/[-\w]{25,}/);
+  return match ? `https://drive.google.com/file/d/${match[0]}/view` : url;
+};
 
   const fetchUserProfile = async () => {
     setLoading(true);
@@ -134,84 +139,100 @@ export default function Profile() {
 
               {/* === Internships === */}
               <div className="tab-pane fade" id="internships">
-  <div className="d-flex justify-content-center">
-    <div style={styles.card}>
-      <h5 className="text-center mb-3">🔖 Your Internships</h5>
-      {(userProfile.internships || []).length > 0 ? (
-        <ul className="list-group list-group-flush">
-          {(userProfile.internships || []).map((internship) => (
-            <li key={internship._id || internship.internshipID} className="list-group-item">
-              <strong>Company-{internship.organizationName}<br/></strong>
-              <strong>Role-{internship.role}</strong><br />
-              <small>
-                <strong>{new Date(internship.startingDate).toLocaleDateString()}</strong> to{" "}
-                <strong>{new Date(internship.endingDate).toLocaleDateString()}</strong>
-              </small>
+                <div className="d-flex justify-content-center">
+                  <div style={styles.card}>
+                    <h5 className="text-center mb-3">🔖 Your Internships</h5>
+                    {(userProfile.internships || []).length > 0 ? (
+                      <ul className="list-group list-group-flush">
+                        {(userProfile.internships || []).map((internship) => (
+                          <li key={internship._id || internship.internshipID} className="list-group-item">
+                            <strong>Company-{internship.organizationName}<br/></strong>
+                            <strong>Role-{internship.role}</strong><br />
+                            <small>
+                              <strong>{new Date(internship.startingDate).toLocaleDateString()}</strong> to{" "}
+                              <strong>{new Date(internship.endingDate).toLocaleDateString()}</strong>
+                            </small>
+                            <div className="mt-3 d-flex flex-wrap gap-4">
+                              Files:
 
-              <div className="mt-3 d-flex flex-wrap gap-4">
-                Files:
-                {internship.offerLetter && (
-                  <div className="text-center">
-                    <div>Offer Letter</div>
-                    <a
-                      href={`http://localhost:5000${internship.offerLetter}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg"
-                        alt="Offer Letter"
-                        style={{ width: '50px', height: '50px', cursor: 'pointer' }}
-                      />
-                    </a>
-                  </div>
-                )}
+                              {/* Offer Letter */}
+                              {internship.offerLetter && (
+                                <div className="text-center">
+                                  <div>Offer Letter</div>
+                                  <a
+                                    href={
+                                      internship.offerLetter.includes("drive.google.com")
+                                        ? convertDriveLink(internship.offerLetter)
+                                        : `http://localhost:5000${internship.offerLetter}`
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <img
+                                      src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg"
+                                      alt="Offer Letter"
+                                      style={{ width: '50px', height: '50px', cursor: 'pointer' }}
+                                    />
+                                  </a>
+                                </div>
+                              )}
 
-                {internship.applicationLetter && (
-                  <div className="text-center">
-                    <div>Approval Letter</div>
-                    <a
-                      href={`http://localhost:5000${internship.applicationLetter}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg"
-                        alt="Approval Letter"
-                        style={{ width: '50px', height: '50px', cursor: 'pointer' }}
-                      />
-                    </a>
-                  </div>
-                )}
+                              {/* Application Letter */}
+                              {internship.applicationLetter && (
+                                <div className="text-center">
+                                  <div>Approval Letter</div>
+                                  <a
+                                    href={
+                                      internship.applicationLetter.includes("drive.google.com")
+                                        ? convertDriveLink(internship.applicationLetter)
+                                        : `http://localhost:5000${internship.applicationLetter}`
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <img
+                                      src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg"
+                                      alt="Approval Letter"
+                                      style={{ width: '50px', height: '50px', cursor: 'pointer' }}
+                                    />
+                                  </a>
+                                </div>
+                              )}
 
-                {internship.noc && (
-                  <div className="text-center">
-                    <div>NOC</div>
-                    <a
-                      href={`http://localhost:5000${internship.noc}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg"
-                        alt="NOC"
-                        style={{ width: '50px', height: '50px', cursor: 'pointer' }}
-                      />
-                    </a>
+                              {/* NOC */}
+                              {internship.noc ? (
+                                <div className="text-center">
+                                  <div>NOC</div>
+                                  <a
+                                    href={
+                                      internship.noc.includes("drive.google.com")
+                                        ? convertDriveLink(internship.noc)
+                                        : `http://localhost:5000${internship.noc}`
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <img
+                                      src="https://upload.wikimedia.org/wikipedia/commons/8/87/PDF_file_icon.svg"
+                                      alt="NOC"
+                                      style={{ width: '50px', height: '50px', cursor: 'pointer' }}
+                                    />
+                                  </a>
+                                </div>
+                              ) : (
+                                <div className="text-muted text-center">NOC not uploaded</div>
+                              )}
+                            </div>
+
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-muted text-center">No internships found.</p>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-muted text-center">No internships found.</p>
-      )}
-    </div>
-  </div>
-</div>
-
-
               {/* === Feedback === */}
               <div className="tab-pane fade" id="feedbacks">
                 <div className="d-flex justify-content-center">

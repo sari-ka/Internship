@@ -16,7 +16,6 @@ const Internships = () => {
     company: "",
   });
   const [showFilters, setShowFilters] = useState(false);
-
   const toggleFilters = () => {
     setShowFilters(!showFilters);
   };
@@ -72,40 +71,19 @@ const Internships = () => {
     type,
     company,
   } = filters;
+  return `There ${count === 1 ? "is" : "are"} ${count} student${count > 1 ? "s" : ""}.`;
+};
 
-  const parts = [];
+const handleDelete = async (id) => {
+  if (!window.confirm("Are you sure you want to delete this internship?")) return;
 
-  // Add status
-  if (type) {
-    parts.push(`are ${type === "future" ? "going to do" : type === "ongoing" ? "currently doing" : "done"} internships`);
-  } else {
-    parts.push("have internships");
+  try {
+    await axios.delete(`${BACKEND_URL}/api/admin/internships/${id}`);
+    setInternships(prev => prev.filter(i => i._id !== id));
+  } catch (error) {
+    console.error("Error deleting internship:", error);
+    alert("Failed to delete internship.");
   }
-
-  // Add company
-  if (company) {
-    parts.push(`at companies matching "${company}"`);
-  }
-
-  // Add years and months
-  if (year && endYear) {
-    parts.push(`that started in ${year} and end in ${endYear}`);
-  } else if (year) {
-    parts.push(`starting in ${year}`);
-  } else if (endYear) {
-    parts.push(`ending in ${endYear}`);
-  }
-
-  if (month && endMonth) {
-    parts.push(`between ${month} and ${endMonth}`);
-  }
-
-  // Add semester/branch/section
-  if (semester) parts.push(`from semester ${semester}`);
-  if (branch) parts.push(`from ${branch}`);
-  if (section) parts.push(`from section ${section}`);
-
-  return `There ${count === 1 ? "is" : "are"} ${count} student${count > 1 ? "s" : ""} who ${parts.join(", ")}.`;
 };
 
 
@@ -312,9 +290,11 @@ const Internships = () => {
                   <th>Semester</th>
                   <th>Branch</th>
                   <th>Section</th>
+                  <th>Stipend</th>
                   <th>Hr mail</th>
                   <th>Hr phone</th>
                   <th>Documents</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -329,6 +309,7 @@ const Internships = () => {
                     <td>{i.semester || "-"}</td>
                     <td>{i.branch || "-"}</td>
                     <td>{i.section || "-"}</td>
+                    <td>{i.package || "unpaid"}</td>
                     <td>{i.hrEmail || "-"}</td>
                     <td>{i.hrPhone || "-"}</td>
                     <td className="docs">
@@ -373,6 +354,11 @@ const Internships = () => {
                       ) : (
                         <span className="text-muted">NOC not uploaded</span>
                       )}
+                    </td>
+                    <td>
+                      <button className="btn btn-danger" onClick={() => handleDelete(i._id)}>
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}
