@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer
+  BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, LabelList
 } from 'recharts';
 
 const Analytics = () => {
@@ -21,7 +21,7 @@ const Analytics = () => {
         params: {
           status: statusFilter,
           year: yearFilter,
-          month: monthFilter,
+          // month: monthFilter,
           section: sectionFilter
         }
       });
@@ -61,20 +61,6 @@ const Analytics = () => {
 
         <select
           className="form-select w-auto"
-          value={monthFilter}
-          onChange={(e) => setMonthFilter(e.target.value)}
-        >
-          <option value="">Select Month</option>
-          {[
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
-          ].map((month, i) => (
-            <option key={i + 1} value={i + 1}>{month}</option>
-          ))}
-        </select>
-
-        <select
-          className="form-select w-auto"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
@@ -96,29 +82,34 @@ const Analytics = () => {
         </select>
       </div>
 
-      {/* Branch-wise Chart */}
       <h4 className='text-center mt-5 mb-3'>Branch-wise Internships</h4>
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={branchData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-          <XAxis dataKey="branch" />
-          <YAxis allowDecimals={false} />
-          <Tooltip />
-          <Legend />
-          <Line type="monotone" dataKey="count" stroke="#6a5acd" strokeWidth={2.5} />
-        </LineChart>
-      </ResponsiveContainer>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={branchData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <XAxis dataKey="branch" />
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="count" fill="#6a5acd" barSize={40}>
+              <LabelList dataKey="count" position="top" />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+
 
       {/* Semester-wise Chart */}
       <h4 className='text-center mt-5 mb-3'>Semester-wise Internships</h4>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={semesterData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+        <BarChart data={semesterData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
           <XAxis dataKey="semester" />
           <YAxis allowDecimals={false} />
           <Tooltip />
           <Legend />
-          <Line type="monotone" dataKey="count" stroke="#3cb371" strokeWidth={2.5} />
-        </LineChart>
+          <Bar dataKey="count" fill="#3cb371" barSize={40}>
+            <LabelList dataKey="count" position="top" />
+          </Bar>
+        </BarChart>
       </ResponsiveContainer>
+
     </div>
   );
 };

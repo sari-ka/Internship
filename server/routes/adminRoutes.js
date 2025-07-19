@@ -283,7 +283,7 @@ router.post('/feedbacks', async (req, res) => {
 // Analytics route: branch & semester counts for internships with optional filters
 router.get('/analytics', async (req, res) => {
   try {
-    const { status, year, month, section } = req.query;
+    const { status, year, section } = req.query;
 
     const internships = await Internship.find();
     const users = await User.find();
@@ -303,7 +303,7 @@ router.get('/analytics', async (req, res) => {
 
     // Initialize branchCounts
     knownBranches.forEach(b => branchCounts[b] = 0);
-    branchCounts["Other"] = 0;
+    // branchCounts["Other"] = 0;
 
     const filtered = internships.filter((i) => {
       const roll = i.rollNo?.toUpperCase().trim();
@@ -320,7 +320,6 @@ router.get('/analytics', async (req, res) => {
 
       if (status && status !== "all" && internshipStatus !== status) return false;
       if (year && start.getFullYear().toString() !== year) return false;
-      if (month && (start.getMonth() + 1).toString() !== month) return false;
       if (section && user.section !== section) return false;
 
       // Collect into counts
@@ -329,9 +328,10 @@ router.get('/analytics', async (req, res) => {
 
       if (knownBranches.includes(branch)) {
         branchCounts[branch]++;
-      } else {
-        branchCounts["Other"]++;
       }
+      //  else {
+      //   branchCounts["Other"]++;
+      // }
 
       semesterCounts[semester] = (semesterCounts[semester] || 0) + 1;
 
@@ -437,6 +437,26 @@ router.delete("/internships/:id", async (req, res) => {
     res.json({ message: "Internship deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/roll/:rollNo', async (req, res) => {
+  const { rollNo } = req.params;
+  const { email, semester, section, branch } = req.body;
+
+  try {
+    const user = await User.findOneAndUpdate(
+      { rollNo },
+      { email, semester, section, branch },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ error: "Student not found" });
+
+    res.json(user);
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "./Internship.css"; // Link the CSS
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
+import "./Internship.css"; 
 
 const Internships = () => {
   const [internships, setInternships] = useState([]);
@@ -16,6 +18,23 @@ const Internships = () => {
     company: "",
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [selectedFields, setSelectedFields] = useState([]);
+  const exportableFields = [
+  { key: "rollNo", label: "Roll No" },
+  { key: "organizationName", label: "Organization" },
+  { key: "role", label: "Role" },
+  { key: "startingDate", label: "Start Date" },
+  { key: "endingDate", label: "End Date" },
+  { key: "status", label: "Status" },
+  { key: "semester", label: "Semester" },
+  { key: "branch", label: "Branch" },
+  { key: "section", label: "Section" },
+  { key: "package", label: "Stipend" },
+  { key: "hrEmail", label: "HR Email" },
+  { key: "hrPhone", label: "HR Phone" },
+];
+
   const toggleFilters = () => {
     setShowFilters(!showFilters);
   };
@@ -32,6 +51,37 @@ const Internships = () => {
       .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
     return queryParams.join("&");
   };
+
+  const exportToExcel = async () => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Internships");
+
+  // Add header
+  const headerRow = selectedFields.map((key) => {
+    const field = exportableFields.find(f => f.key === key);
+    return field ? field.label : key;
+  });
+  worksheet.addRow(headerRow);
+
+  // Add data rows
+  internships.forEach((entry) => {
+    const row = selectedFields.map((field) => {
+      if (field === "startingDate" || field === "endingDate") {
+        return new Date(entry[field]).toLocaleDateString();
+      }
+      return entry[field] || "-";
+    });
+    worksheet.addRow(row);
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  saveAs(blob, "internships.xlsx");
+};
+
 
   const fetchInternships = async () => {
     const query = buildQuery();
@@ -125,8 +175,12 @@ const handleDelete = async (id) => {
 
   return (
     <div className="internship-page container-fluid mt-5">
-      <h1 className="text-center mb-4 fw-bold border-bottom pb-2">Internships</h1>
-
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="text-center flex-grow-1 fw-bold mb-0 border-bottom pb-2">Internships</h1>
+        <button className="btn btn-success ms-3" onClick={() => setShowExportModal(true)}>
+          Export to Excel
+        </button>
+      </div>
       <div className="mb-3 text-center">
         <button className="btn btn-outline-dark" onClick={toggleFilters}>
           {showFilters ? "Hide Filters" : "Show Filters"}
@@ -374,6 +428,53 @@ const handleDelete = async (id) => {
           </div>
         </div>
       </div>
+      {showExportModal && (
+  <div className="modal d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+    <div className="modal-dialog" role="document">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h5 className="modal-title">Select Fields to Export</h5>
+          <button type="button" className="btn-close" onClick={() => setShowExportModal(false)}></button>
+        </div>
+        <div className="modal-body">
+          {exportableFields.map((field) => (
+            <div className="form-check" key={field.key}>
+              <input
+                className="form-check-input"
+                type="checkbox"
+                checked={selectedFields.includes(field.key)}
+                onChange={() => {
+                  setSelectedFields((prev) =>
+                    prev.includes(field.key)
+                      ? prev.filter((key) => key !== field.key)
+                      : [...prev, field.key]
+                  );
+                }}
+              />
+              <label className="form-check-label">{field.label}</label>
+            </div>
+          ))}
+        </div>
+        <div className="modal-footer">
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              exportToExcel();
+              setShowExportModal(false);
+            }}
+            disabled={selectedFields.length === 0}
+          >
+            Download
+          </button>
+          <button className="btn btn-secondary" onClick={() => setShowExportModal(false)}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
