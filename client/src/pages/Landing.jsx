@@ -65,7 +65,7 @@ const Landing = () => {
           <div
             className="card shadow-lg"
             style={{ width: '22rem', cursor: 'pointer' }}
-            onClick={() => navigate('/guest-login')}
+            onClick={() => navigate('/guest-dashboard')}
           >
             <img
               src="https://cdn-icons-png.flaticon.com/512/149/149071.png"

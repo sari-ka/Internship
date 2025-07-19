@@ -18,7 +18,7 @@ import InternshipForm from './pages/InternshipForm';
 import Upload from './pages/Upload';
 import Profile from './pages/Profile';
 import Landing from './pages/Landing';
-import LoginGuest from './pages/Login_guest';
+// import LoginGuest from './pages/Login_guest';
 import GuestDashboard from './pages/GuestDashboard';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -33,7 +33,7 @@ const App = () => {
         <Route path="/upload" element={<Upload />} />
         <Route path="/admin-login" element={<Login_ad />} />
         <Route path="/student-login" element={<Login />} />
-        <Route path="/guest-login" element={<LoginGuest />} />
+        {/* <Route path="/guest-login" element={<LoginGuest />} /> */}
         <Route path="/register" element={<Register />} />
         <Route path="/apply" element={<InternshipForm />} />
         <Route path="/guest-dashboard" element={<GuestDashboard />} />
