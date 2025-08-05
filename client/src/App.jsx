@@ -1,10 +1,9 @@
 // src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-
 import Layout from './components/Layout';
-import PrivateRoute from './components/PrivateRoute'; // For admin
-
+import PrivateRoute from './components/PrivateRoute';
+import Organizations from './pages/Organizations';
 import AdminDashboard from './pages/AdminDashboard';
 import Students from './pages/Students';
 import Internships from './pages/Internships';
@@ -50,6 +49,7 @@ const App = () => {
           <Route path="internships" element={<Internships />} />
           <Route path="feedbacks" element={<Feedbacks />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="organizations" element={<Organizations />} />
         </Route>
 
         {/* Redirect all unknown routes */}

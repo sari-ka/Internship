@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./InternshipForm.css";
 
@@ -28,8 +28,27 @@ function InternshipForm() {
   const [offerFile, setOfferFile] = useState(null);
   const [approvalFile, setApprovalFile] = useState(null);
   const [nocFile, setNocFile] = useState(null);
-
+  const [organizations, setOrganizations] = useState([]);
   const semesters = ["1-1", "1-2", "2-1", "2-2", "3-1", "3-2", "4-1", "4-2"];
+
+  useEffect(() => {
+  const fetchOrganizations = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/organization");
+      const data = await res.json();
+      console.log("Fetched organizations from API:", data); // ✅ This confirms fetch worked
+      setOrganizations(data); // ✅ This sets the state
+    } catch (err) {
+      console.error("Failed to fetch organizations:", err);
+    }
+  };
+  fetchOrganizations();
+}, []);
+
+useEffect(() => {
+  console.log("Updated organizations state:", organizations);
+}, [organizations]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -172,7 +191,7 @@ function InternshipForm() {
       <div className="form-container">
         <h1>UG/PG Internship Portal</h1>
         <form className="internship-form" onSubmit={handleSubmit}>
-          {["rollNo", "name", "branch", "section", "email", "phoneNo", "role", "organizationName", "hrEmail", "hrPhone", "duration", "package"].map((field) => (
+          {["rollNo", "name", "branch", "section", "email", "phoneNo", "role", "hrEmail", "hrPhone", "duration", "package"].map((field) => (
             <div className="form-row" key={field}>
               <input
                 type={field === "email" || field === "hrEmail" ? "email" : "text"}
@@ -185,7 +204,28 @@ function InternshipForm() {
               {errors[field] && <span className="error">{errors[field]}</span>}
             </div>
           ))}
-
+          <div className="form-row">
+            <label>Organization Name</label>
+            <select
+              name="organizationName"
+              value={formData.organizationName}
+              onChange={handleChange}
+              required
+            >
+              <option value="">Select Organization</option>
+              {organizations.map((org) => (
+                <option key={org._id} value={org.name}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+            {errors.organizationName && <span className="error">{errors.organizationName}</span>}
+            
+            {/* Support note below dropdown */}
+            <div style={{ fontSize: "0.85rem", color: "gray", marginTop: "4px", marginBottom: "12px" }}>
+              If your organization is not listed, please contact the admin to add it.
+            </div>
+          </div>
           <div className="form-row">
             <label>Semester</label>
             <select name="semester" value={formData.semester} onChange={handleChange} required>

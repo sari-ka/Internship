@@ -8,7 +8,7 @@ const userRoutes = require('./routes/UserRoutes')
 const guestRoutes=require('./routes/guestRoutes')
 const path = require('path');
 const Admin = require('./models/Admin');
-
+const organizationRoutes = require('./routes/organizationRoutes');
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -43,6 +43,17 @@ app.use('/api/internships', internshipRoutes);
 app.use('/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/guest',guestRoutes)
+app.use('/api/organization', organizationRoutes);
+
+const cron = require('node-cron');
+const { sendFeedbackEmailReminders } = require('./utils/reminderEmailService');
+
+// Every Monday and Thursday at 10 AM
+cron.schedule('0 10 * * 1,4', async () => {
+  console.log('⏰ Running feedback reminder email job...');
+  await sendFeedbackEmailReminders();
+});
+
 
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
